@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-07-23T05:05:21",
-  "description": "## 1.0.0-dev.1 (2026-07-23)\n\n### ✨ New Features\n\n* add VocaColle Korean translation patches ([027c28e](https://github.com/ilikeadofai/morphe-patches-template/commit/027c28e37e07a5502d42b4254fab490d6ae6aba6))",
-  "download_url": "https://github.com/ilikeadofai/morphe-patches-template/releases/download/v1.0.0-dev.1/patches-1.0.0-dev.1.mpp",
+  "created_at": "2026-07-23T05:11:19",
+  "description": "## [1.0.0-dev.2](https://github.com/ilikeadofai/morphe-patches-template/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2026-07-23)\n\n### 🐛 Bug Fixes\n\n* clean verification artifacts before release ([6bf2160](https://github.com/ilikeadofai/morphe-patches-template/commit/6bf216064de5624f30ce9dcbbfabce9d7dcab0b0))",
+  "download_url": "https://github.com/ilikeadofai/morphe-patches-template/releases/download/v1.0.0-dev.2/patches-1.0.0-dev.2.mpp",
   "signature_download_url": "",
-  "version": "1.0.0-dev.1"
+  "version": "1.0.0-dev.2"
 }
