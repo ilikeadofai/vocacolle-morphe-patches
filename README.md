@@ -34,7 +34,7 @@ network/cache foundations for later opt-in features.
 ## Current patches
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.1.0-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.1.0-dev.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;7 patches total
+> **[v1.1.0-dev.2](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.1.0-dev.2)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;7 patches total
 <details open>
 <summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;7 patches</summary>
 <br>

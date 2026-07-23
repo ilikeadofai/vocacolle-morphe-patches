@@ -1,3 +1,9 @@
+## [1.1.0-dev.2](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0-dev.1...v1.1.0-dev.2) (2026-07-23)
+
+### 🐛 Bug Fixes
+
+* harden network and cache runtime safety ([8c0d133](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/8c0d133f54c84055ee1d5411cb3537805fb7575f))
+
 ## [1.1.0-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.0.1-dev.1...v1.1.0-dev.1) (2026-07-23)
 
 ### ✨ New Features
