@@ -1,3 +1,9 @@
+## [1.1.0-dev.6](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0-dev.5...v1.1.0-dev.6) (2026-07-23)
+
+### 🐛 Bug Fixes
+
+* redesign Morphe settings for native theming ([d7a149d](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/d7a149dfcafbca38554a40b48f43b9765b23e25e))
+
 ## [1.1.0-dev.5](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0-dev.4...v1.1.0-dev.5) (2026-07-23)
 
 ### 🐛 Bug Fixes
