@@ -10,32 +10,24 @@ The current development target is VocaColle 7.40.0 (`versionCode 177`).
 ## Patches
 
 <!-- PATCHES_START EXPANDED -->
+> **[v1.0.0-dev.1](https://github.com/ilikeadofai/morphe-patches-template/releases/tag/v1.0.0-dev.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;4 patches total
+<details open>
+<summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;4 patches</summary>
+<br>
 
-### VocaColle compatibility probe
+**🎯 Supported versions:**
 
-An opt-in no-op patch that verifies package/version filtering, APK rebuilding,
-signing, split installation, and application startup before functional patches
-are introduced. It intentionally performs no resource or bytecode changes.
+| 7.40.0 |
+| :---: |
 
-### Korean static UI
+| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
+|----------|----------------|-----------|
+| [Korean hardcoded UI](#korean-hardcoded-ui) | Translates production Compose and third-party UI strings embedded directly in VocaColle bytecode. |  |
+| [Korean native server UI](#korean-native-server-ui) | Translates whitelisted server-provided labels only at native UI display boundaries. |  |
+| [Korean static UI](#korean-static-ui) | Adds reviewed Korean resources for all app and library static UI strings, plurals, and arrays. |  |
+| [VocaColle compatibility probe](#vocacolle-compatibility-probe) | Verifies that VocaColle 7.40.0 can be decoded, rebuilt, and signed without changing app behavior. |  |
 
-Adds an opt-in Korean locale overlay for 1,607 user-visible strings, three
-plural resources, and one string array across the app and bundled UI libraries.
-The original default resources remain unchanged as the fallback.
-
-### Korean hardcoded UI
-
-Translates eight method-scoped DEX literals used by the first-party Proseka
-screen and two bundled advertising UIs. Preview fixtures, server comparison
-values, search queries, social hashtags, filenames, and submission payloads are
-intentionally excluded.
-
-### Korean native server UI
-
-Translates a narrow whitelist of server-provided labels at native display
-boundaries. It currently covers the ranking navigation and stable push-topic
-titles while preserving unknown strings, song titles, creator names, URLs, and
-request identifiers.
+</details>
 
 <!-- PATCHES_END -->
 
