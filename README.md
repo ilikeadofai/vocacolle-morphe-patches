@@ -34,9 +34,9 @@ network/cache foundations for later opt-in features.
 ## Current patches
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.1.0-dev.3](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.1.0-dev.3)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;7 patches total
+> **[v1.1.0-dev.4](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.1.0-dev.4)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;5 patches total
 <details open>
-<summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;7 patches</summary>
+<summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;5 patches</summary>
 <br>
 
 **🎯 Supported versions:**
@@ -47,10 +47,8 @@ network/cache foundations for later opt-in features.
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
 | [Customize VocaColle branding](#customize-vocacolle-branding) | Optionally changes the launcher name and icon while preserving the original Japanese branding by default. | • App name<br>• App icon PNG path |
-| [English static UI](#english-static-ui) | Adds reviewed English resources for all app and library static UI strings, plurals, and arrays. |  |
-| [Korean hardcoded UI](#korean-hardcoded-ui) | Localizes production Compose and third-party UI literals using the selected display language. |  |
-| [Korean native server UI](#korean-native-server-ui) | Localizes whitelisted server-provided labels only at native UI display boundaries. |  |
-| [Korean static UI](#korean-static-ui) | Adds reviewed Korean resources for all app and library static UI strings, plurals, and arrays. |  |
+| [English UI](#english-ui) | Adds complete English static, hardcoded, and server-provided UI localization. |  |
+| [Korean UI](#korean-ui) | Adds complete Korean static, hardcoded, and server-provided UI localization. |  |
 | [VocaColle Morphe settings](#vocacolle-morphe-settings) | Adds display-language, cache, diagnostic, and patch-version controls to native Morphe settings. |  |
 | [VocaColle compatibility probe](#vocacolle-compatibility-probe) | Verifies that VocaColle 7.40.0 can be decoded, rebuilt, and signed without changing app behavior. |  |
 

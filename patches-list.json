@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.1.0-dev.3",
+  "version": "1.1.0-dev.4",
   "patches": [
     {
       "name": "Customize VocaColle branding",
@@ -48,10 +48,14 @@
       ]
     },
     {
-      "name": "English static UI",
-      "description": "Adds reviewed English resources for all app and library static UI strings, plurals, and arrays.",
+      "name": "English UI",
+      "description": "Adds complete English static, hardcoded, and server-provided UI localization.",
       "default": true,
-      "dependencies": [],
+      "dependencies": [
+        "ResourcePatch",
+        "BytecodePatch",
+        "BytecodePatch"
+      ],
       "compatiblePackages": [
         {
           "packageName": "jp.nicovideo.nicobox",
@@ -74,62 +78,14 @@
       "options": []
     },
     {
-      "name": "Korean hardcoded UI",
-      "description": "Localizes production Compose and third-party UI literals using the selected display language.",
+      "name": "Korean UI",
+      "description": "Adds complete Korean static, hardcoded, and server-provided UI localization.",
       "default": true,
-      "dependencies": [],
-      "compatiblePackages": [
-        {
-          "packageName": "jp.nicovideo.nicobox",
-          "name": "VocaColle",
-          "description": null,
-          "apkFileType": "APK",
-          "appIconColor": null,
-          "signatures": null,
-          "targets": [
-            {
-              "version": "7.40.0",
-              "versionCodes": null,
-              "isExperimental": false,
-              "minSdk": null,
-              "description": null
-            }
-          ]
-        }
+      "dependencies": [
+        "ResourcePatch",
+        "BytecodePatch",
+        "BytecodePatch"
       ],
-      "options": []
-    },
-    {
-      "name": "Korean native server UI",
-      "description": "Localizes whitelisted server-provided labels only at native UI display boundaries.",
-      "default": true,
-      "dependencies": [],
-      "compatiblePackages": [
-        {
-          "packageName": "jp.nicovideo.nicobox",
-          "name": "VocaColle",
-          "description": null,
-          "apkFileType": "APK",
-          "appIconColor": null,
-          "signatures": null,
-          "targets": [
-            {
-              "version": "7.40.0",
-              "versionCodes": null,
-              "isExperimental": false,
-              "minSdk": null,
-              "description": null
-            }
-          ]
-        }
-      ],
-      "options": []
-    },
-    {
-      "name": "Korean static UI",
-      "description": "Adds reviewed Korean resources for all app and library static UI strings, plurals, and arrays.",
-      "default": true,
-      "dependencies": [],
       "compatiblePackages": [
         {
           "packageName": "jp.nicovideo.nicobox",

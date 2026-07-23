@@ -1,3 +1,9 @@
+## [1.1.0-dev.4](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0-dev.3...v1.1.0-dev.4) (2026-07-23)
+
+### ✨ New Features
+
+* consolidate language patches ([672bdcf](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/672bdcf63548d1d18bba3735872c93d78a67bb40))
+
 ## [1.1.0-dev.3](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0-dev.2...v1.1.0-dev.3) (2026-07-23)
 
 ### 🐛 Bug Fixes
