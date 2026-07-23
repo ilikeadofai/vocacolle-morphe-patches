@@ -23,9 +23,9 @@ Korean.
    https://github.com/ilikeadofai/vocacolle-morphe-patches
    ```
 
-3. Patch VocaColle 7.40.0 and enable the three Korean localization patches
-   together. The compatibility probe is optional and does not change app
-   behavior.
+3. Patch VocaColle 7.40.0. The three Korean localization patches are selected
+   by default and should remain enabled together. The compatibility probe stays
+   optional and does not change app behavior.
 
 ## Current patches
 

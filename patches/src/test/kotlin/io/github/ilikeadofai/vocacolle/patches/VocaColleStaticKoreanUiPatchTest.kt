@@ -3,16 +3,16 @@ package io.github.ilikeadofai.vocacolle.patches
 import app.morphe.patcher.patch.ApkFileType
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class VocaColleStaticKoreanUiPatchTest {
     @Test
-    fun `declares an opt-in Korean static UI patch for VocaColle 7_40_0`() {
+    fun `declares a default-enabled Korean static UI patch for VocaColle 7_40_0`() {
         val patch = vocacolleStaticKoreanUiPatch
 
         assertEquals("Korean static UI", patch.name)
-        assertFalse(patch.default)
+        assertTrue(patch.default)
 
         val compatibility = assertNotNull(patch.compatibility).single()
         assertEquals("jp.nicovideo.nicobox", compatibility.packageName)

@@ -38,7 +38,7 @@ private object NicoPushDescriptionFingerprint : Fingerprint(
 val vocacolleServerUiKoreanPatch = bytecodePatch(
     name = "Korean native server UI",
     description = "Translates whitelisted server-provided labels only at native UI display boundaries.",
-    default = false
+    default = true
 ) {
     compatibleWith(VOCACOLLE)
     extendWith("extensions/extension.mpe")

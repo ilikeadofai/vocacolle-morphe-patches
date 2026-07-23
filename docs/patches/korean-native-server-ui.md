@@ -2,7 +2,9 @@
 
 ## Scope
 
-`Korean native server UI` is an opt-in bytecode patch for VocaColle 7.40.0.
+`Korean native server UI` is a default-enabled bytecode patch for VocaColle
+7.40.0. Its original validation artifact was produced while the patch was
+opt-in; only the bundle selection default has changed.
 It translates only stable server-provided metadata at native UI display
 boundaries:
 

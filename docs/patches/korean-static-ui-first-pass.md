@@ -21,13 +21,14 @@ The approved source/target inventory is tracked in
 - Missing Korean resources continue to fall back to Japanese.
 - The patch has no bytecode fingerprint, extension, network code, or app-data
   migration.
-- The patch is opt-in and targets only `jp.nicovideo.nicobox` 7.40.0.
+- At the time of this pass the patch was opt-in; current bundles select it by
+  default. The target remains restricted to `jp.nicovideo.nicobox` 7.40.0.
 
 ## Automated verification
 
 The patch was developed test-first. The test verifies:
 
-- patch name, opt-in default, package, file type, and app version;
+- patch name, then-current opt-in default, package, file type, and app version;
 - the exact set of 18 Korean resource keys and values;
 - absence of Japanese characters in the approved Korean catalog.
 
