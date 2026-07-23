@@ -10,7 +10,7 @@ The current development target is VocaColle 7.40.0 (`versionCode 177`).
 ## Patches
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.0.0-dev.3](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.0.0-dev.3)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;4 patches total
+> **[v1.0.0](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.0.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;4 patches total
 <details open>
 <summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;4 patches</summary>
 <br>
