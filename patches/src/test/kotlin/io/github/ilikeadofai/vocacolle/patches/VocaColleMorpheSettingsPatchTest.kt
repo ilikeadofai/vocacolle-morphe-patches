@@ -42,4 +42,12 @@ class VocaColleMorpheSettingsPatchTest {
         assertNotNull(applicationOnCreateFingerprint.custom)
     }
 
+    @Test
+    fun `fingerprints the native Compose settings screen for Morphe row injection`() {
+        assertEquals("Llj/j0;", settingScreenFingerprint.definingClass)
+        assertEquals("c", settingScreenFingerprint.name)
+        assertEquals("V", settingScreenFingerprint.returnType)
+        assertNotNull(settingScreenFingerprint.custom)
+    }
+
 }

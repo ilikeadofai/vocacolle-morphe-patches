@@ -18,6 +18,10 @@ private const val SETTING_MENU_PROVIDER =
     "Ljp/nicovideo/nicobox/ui/setting/SettingFragment\$b;"
 private const val SETTINGS_LAUNCHER =
     "Lio/github/ilikeadofai/vocacolle/extension/settings/MorpheSettingsLauncher;"
+private const val SETTING_SCREEN = "Llj/j0;"
+private const val SETTING_ROW = "Llj/a0;"
+private const val SETTING_ROW_DESCRIPTOR =
+    "(LG0/m;Ljava/lang/String;LDl/p;Ljava/lang/String;Ljava/lang/String;JLjava/lang/String;JLDl/a;Lq0/r;II)V"
 private const val SETTINGS_ACTIVITY =
     "Lio/github/ilikeadofai/vocacolle/extension/settings/MorpheSettingsActivity;"
 private const val SETTINGS_HOST_ACTIVITY =
@@ -107,6 +111,22 @@ private object SettingsHostActivityOnCreateFingerprint : Fingerprint(
     }
 )
 
+internal val settingScreenFingerprint = Fingerprint(
+    definingClass = SETTING_SCREEN,
+    name = "c",
+    returnType = "V",
+    custom = { method, _ ->
+        method.implementation?.instructions
+            ?.filterIsInstance<ReferenceInstruction>()
+            ?.mapNotNull { it.reference as? MethodReference }
+            ?.count {
+                it.definingClass == SETTING_ROW &&
+                    it.name == "s" &&
+                    it.returnType == "V"
+            } == 8
+    }
+)
+
 internal val appInfoVersionFingerprint = Fingerprint(
     definingClass = APP_INFO_FRAGMENT,
     name = "h2",
@@ -157,6 +177,7 @@ val vocacolleMorpheSettingsPatch = bytecodePatch(
     execute {
         addMorpheMenuItem()
         openMorpheSettingsFromMenu()
+        addMorpheSettingsRow()
         hookSettingsHostActivity()
         appendMorphePatchVersion()
         applySavedDisplayLanguageEarly()
@@ -182,7 +203,48 @@ private fun applySavedDisplayLanguageEarly() {
 
     method.addInstructions(
         superCallIndex + 1,
-        "invoke-static {p0}, $APP_LANGUAGE_CONTROLLER->applySavedLanguage(Landroid/content/Context;)V"
+        """
+            invoke-static {p0}, $SETTINGS_LAUNCHER->initialize(Landroid/content/Context;)V
+            invoke-static {p0}, $APP_LANGUAGE_CONTROLLER->applySavedLanguage(Landroid/content/Context;)V
+        """.trimIndent()
+    )
+}
+
+context(_: BytecodePatchContext)
+private fun addMorpheSettingsRow() {
+    val method = settingScreenFingerprint.method
+    val rowCalls = method.implementation!!.instructions.withIndex().filter { (_, instruction) ->
+        instruction.opcode == Opcode.INVOKE_STATIC_RANGE &&
+            ((instruction as? ReferenceInstruction)?.reference as? MethodReference)?.let {
+                it.definingClass == SETTING_ROW &&
+                    it.name == "s" &&
+                    it.returnType == "V"
+            } == true
+    }
+    check(rowCalls.size == 8) {
+        "Expected eight native settings rows, found ${rowCalls.size}"
+    }
+
+    val appInfoRowIndex = rowCalls[4].index
+    method.addInstructions(
+        appInfoRowIndex + 1,
+        """
+            invoke-static {}, $SETTINGS_LAUNCHER->menuTitle()Ljava/lang/String;
+            move-result-object v8
+            invoke-static {}, $SETTINGS_LAUNCHER->createClickCallback()Ljava/lang/Object;
+            move-result-object v17
+            check-cast v17, LDl/a;
+            const/4 v7, 0x0
+            const/4 v9, 0x0
+            const/4 v10, 0x0
+            const/4 v11, 0x0
+            const-wide/16 v12, 0x0
+            const/4 v14, 0x0
+            const-wide/16 v15, 0x0
+            const/4 v19, 0x0
+            const/16 v20, 0xfd
+            invoke-static/range {v7 .. v20}, $SETTING_ROW->s$SETTING_ROW_DESCRIPTOR
+        """.trimIndent()
     )
 }
 
