@@ -1,9 +1,10 @@
 # VocaColle Morphe Patches
 
 Unofficial [Morphe](https://morphe.software/) patches for the Android app
-VocaColle (`jp.nicovideo.nicobox`). The current release localizes static
-resources, hardcoded Compose strings, and reviewed server-provided labels into
-Korean.
+VocaColle (`jp.nicovideo.nicobox`). The current development release adds the
+Morphe settings foundation, optional launcher branding, visible patch-version
+information, selectable Japanese/English/Korean UI, and reusable bounded
+network/cache foundations for later opt-in features.
 
 [![Latest release](https://img.shields.io/github/v/release/ilikeadofai/vocacolle-morphe-patches?sort=semver)](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/latest)
 [![Release workflow](https://github.com/ilikeadofai/vocacolle-morphe-patches/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/ilikeadofai/vocacolle-morphe-patches/actions/workflows/release.yml)
@@ -23,16 +24,19 @@ Korean.
    https://github.com/ilikeadofai/vocacolle-morphe-patches
    ```
 
-3. Patch VocaColle 7.40.0. The three Korean localization patches are selected
-   by default and should remain enabled together. The compatibility probe stays
-   optional and does not change app behavior.
+3. Patch VocaColle 7.40.0. The Morphe settings foundation and four localization
+   patches are selected by default. Keep the localization patches enabled
+   together, then choose System default, Japanese, English, or Korean inside
+   Morphe settings. Launcher branding is optional and preserves
+   the original Japanese name and icon unless custom values are supplied. The
+   compatibility probe stays optional and does not change app behavior.
 
 ## Current patches
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.0.1-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.0.1-dev.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;4 patches total
+> **[v1.1.0-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.1.0-dev.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;7 patches total
 <details open>
-<summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;4 patches</summary>
+<summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;7 patches</summary>
 <br>
 
 **🎯 Supported versions:**
@@ -42,25 +46,48 @@ Korean.
 
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
-| [Korean hardcoded UI](#korean-hardcoded-ui) | Translates production Compose and third-party UI strings embedded directly in VocaColle bytecode. |  |
-| [Korean native server UI](#korean-native-server-ui) | Translates whitelisted server-provided labels only at native UI display boundaries. |  |
+| [Customize VocaColle branding](#customize-vocacolle-branding) | Optionally changes the launcher name and icon while preserving the original Japanese branding by default. | • App name<br>• App icon PNG path |
+| [English static UI](#english-static-ui) | Adds reviewed English resources for all app and library static UI strings, plurals, and arrays. |  |
+| [Korean hardcoded UI](#korean-hardcoded-ui) | Localizes production Compose and third-party UI literals using the selected display language. |  |
+| [Korean native server UI](#korean-native-server-ui) | Localizes whitelisted server-provided labels only at native UI display boundaries. |  |
 | [Korean static UI](#korean-static-ui) | Adds reviewed Korean resources for all app and library static UI strings, plurals, and arrays. |  |
+| [VocaColle Morphe settings](#vocacolle-morphe-settings) | Adds display-language, cache, diagnostic, and patch-version controls to native Morphe settings. |  |
 | [VocaColle compatibility probe](#vocacolle-compatibility-probe) | Verifies that VocaColle 7.40.0 can be decoded, rebuilt, and signed without changing app behavior. |  |
 
 </details>
 
 <!-- PATCHES_END -->
 
+### Customize VocaColle branding
+
+An optional build-time resource patch for the launcher label and icon. Its
+defaults are the untouched Japanese name `ボカコレ` and the original icon. A
+custom icon must be a readable square PNG no larger than 20 MiB or 4096×4096;
+the patch generates legacy and adaptive assets for mdpi through xxxhdpi. The
+option keys are `vocacolleAppName` and `vocacolleAppIconPath`. The launcher name
+is deliberately excluded from locale resources so the original remains
+the default on every system locale.
+
+### English static UI
+
+Adds reviewed English Android resources for all 1,619 app and library catalog
+rows. The deterministic generator and renderer preserve resource identities,
+plurals, arrays, markup, format tokens, escaped newlines, and Android
+`formatted` metadata while excluding `app_name`.
+
 ### Korean hardcoded UI
 
-Translates strings embedded directly in production Compose and third-party
-bytecode. Fingerprints fail closed when the expected code shape changes.
+Retains the v1.0 patch name for compatibility, but localizes strings embedded
+directly in production Compose and third-party bytecode according to the
+selected display language. Fingerprints fail closed when the expected code
+shape changes.
 
 ### Korean native server UI
 
-Translates a small whitelist of stable server-provided navigation and push
-labels at display boundaries. Video titles, creator names, URLs, request IDs,
-and unknown strings remain unchanged. See the
+Retains the v1.0 patch name for compatibility, but localizes a small whitelist
+of stable server-provided navigation and push labels at display boundaries.
+Video titles, creator names, URLs, request IDs, and unknown strings remain
+unchanged. See the
 [native server UI report](docs/patches/korean-native-server-ui.md).
 
 ### Korean static UI
@@ -74,6 +101,17 @@ and arrays. The catalog and verification results are documented in the
 A no-op patch used to prove that the target APK can be decoded, rebuilt, and
 signed without changing runtime behavior. See the
 [compatibility probe report](docs/patches/vocacolle-compatibility-probe.md).
+
+### VocaColle Morphe settings
+
+Adds a `Morphe` item to the native settings toolbar overflow and opens a
+localized framework preference screen hosted by VocaColle's existing settings
+theme. v1.1 includes a persistent runtime-feature switch, display-language
+selection, diagnostics, extension-cache usage, and a cache-clear action.
+VocaColle's app-information screen also displays the
+combined form `7.40.0 · Morphe 1.1.0-dev.1`; the Morphe component follows the
+bundle version automatically. The bounded HTTPS client and atomic cache remain
+unused by default, so v1.1 adds no external requests.
 
 ## Compatibility
 
@@ -107,6 +145,8 @@ fallback behavior, acceptance criteria, and server-enforced limits.
 - [Home and Search second pass](docs/patches/korean-static-ui-second-pass.md)
 - [Full static UI pass](docs/patches/korean-full-static-ui.md)
 - [Native server UI](docs/patches/korean-native-server-ui.md)
+- [v1.1 completion plan](docs/plans/2026-07-23-v1.1-completion.md)
+- [v1.1 verification record](docs/verification-v1.1.md)
 
 ## Development
 
@@ -115,7 +155,8 @@ Configure the environment according to the
 then run:
 
 ```shell
-./gradlew :extensions:extension:testDebugUnitTest :patches:test buildAndroid
+python3 -m unittest discover -s tools/tests -p 'test_*.py'
+./gradlew --no-daemon clean check buildAndroid
 ```
 
 The generated bundle is written to:

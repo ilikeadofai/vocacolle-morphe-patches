@@ -33,6 +33,7 @@ class VocaColleServerUiKoreanPatchTest {
         assertContains(patchSource, "addInstructions(")
         assertContains(patchSource, "index + 1")
         assertContains(patchSource, "return-object v\$register")
+        assertContains(patchSource, "UiLanguageTranslator;")
         assertFalse(patchSource.contains("addInstructions(index"))
     }
 }

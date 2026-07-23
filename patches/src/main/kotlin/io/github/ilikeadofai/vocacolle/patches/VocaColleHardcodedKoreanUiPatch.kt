@@ -1,13 +1,16 @@
 package io.github.ilikeadofai.vocacolle.patches
 
 import app.morphe.patcher.Fingerprint
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
-import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.string
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import io.github.ilikeadofai.vocacolle.patches.shared.Constants.VOCACOLLE
+
+private const val UI_LANGUAGE_TRANSLATOR =
+    "Lio/github/ilikeadofai/vocacolle/extension/UiLanguageTranslator;"
 
 private val externalLinkDialogTitle = string("リンク先に遷移する")
 private val externalLinkDialogOk = string("OK")
@@ -55,40 +58,37 @@ private object ProsekaTopContentFingerprint : Fingerprint(
 @Suppress("unused")
 val vocacolleHardcodedKoreanUiPatch = bytecodePatch(
     name = "Korean hardcoded UI",
-    description = "Translates production Compose and third-party UI strings embedded directly in VocaColle bytecode.",
+    description = "Localizes production Compose and third-party UI literals using the selected display language.",
     default = true
 ) {
     compatibleWith(VOCACOLLE)
+    extendWith("extensions/extension.mpe")
 
     execute {
-        replaceStringLiteral(ExternalLinkDialogFingerprint, 0, "외부 링크로 이동")
-        replaceStringLiteral(ExternalLinkDialogFingerprint, 1, "확인")
-        replaceStringLiteral(ExternalLinkDialogFingerprint, 2, "취소")
-        replaceStringLiteral(ByteDanceLandingDownloadFingerprint, 0, "다운로드")
-        replaceStringLiteral(ByteDanceVideoLandingDownloadFingerprint, 0, "다운로드")
-        replaceStringLiteral(
-            ProsekaTopContentFingerprint,
-            0,
-            "‘로키’, ‘샤를’, ‘Tell Your World’, ‘해피 신시사이저’ 등의 명곡을 3D MV와 함께 다수 수록! " +
-                "SEGA×Colorful Palette가 선사하는 누구나 쉽고 재미있게 즐길 수 있는 리듬 게임."
-        )
-        replaceStringLiteral(ProsekaTopContentFingerprint, 1, "하츠네 미쿠도 등장하는 신작 리듬 게임")
-        replaceStringLiteral(
-            ProsekaTopContentFingerprint,
-            2,
-            "프로젝트 세카이 컬러풀 스테이지! feat. 하츠네 미쿠"
-        )
+        injectRuntimeTranslations(ExternalLinkDialogFingerprint, expectedMatches = 3)
+        injectRuntimeTranslations(ByteDanceLandingDownloadFingerprint, expectedMatches = 1)
+        injectRuntimeTranslations(ByteDanceVideoLandingDownloadFingerprint, expectedMatches = 1)
+        injectRuntimeTranslations(ProsekaTopContentFingerprint, expectedMatches = 3)
     }
 }
 
 context(_: BytecodePatchContext)
-private fun replaceStringLiteral(fingerprint: Fingerprint, matchIndex: Int, replacement: String) {
-    val match = fingerprint.instructionMatches[matchIndex]
-    val register = fingerprint.method
-        .getInstruction<OneRegisterInstruction>(match.index)
-        .registerA
-    fingerprint.method.replaceInstruction(
-        match.index,
-        "const-string v$register, \"$replacement\""
-    )
+private fun injectRuntimeTranslations(fingerprint: Fingerprint, expectedMatches: Int) {
+    val matches = fingerprint.instructionMatches
+    check(matches.size == expectedMatches) {
+        "Expected $expectedMatches UI literals in ${fingerprint.method.definingClass}->${fingerprint.method.name}, " +
+            "found ${matches.size}"
+    }
+    matches.sortedByDescending { it.index }.forEach { match ->
+        val register = fingerprint.method
+            .getInstruction<OneRegisterInstruction>(match.index)
+            .registerA
+        fingerprint.method.addInstructions(
+            match.index + 1,
+            """
+                invoke-static {v$register}, $UI_LANGUAGE_TRANSLATOR->translateHardcoded(Ljava/lang/String;)Ljava/lang/String;
+                move-result-object v$register
+            """.trimIndent()
+        )
+    }
 }

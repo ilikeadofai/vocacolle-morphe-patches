@@ -38,7 +38,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./gradlew clean :extensions:extension:testDebugUnitTest :patches:test buildAndroid --no-daemon
+          python3 -m unittest discover -s tools/tests -p 'test_*.py'
+          ./gradlew clean check buildAndroid --no-daemon
           ./gradlew clean --no-daemon
 
       # Semantic release runs its own Gradle build command.

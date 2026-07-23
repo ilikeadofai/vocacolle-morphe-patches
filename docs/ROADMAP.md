@@ -20,7 +20,7 @@
 
 | Release | 핵심 범위 |
 |---|---|
-| v1.1 | Morphe 설정 화면, 공통 settings/network/cache, 한국어·영어 UI |
+| v1.1 | Morphe 설정 화면, 선택형 앱 이름·아이콘, patch version 표시, 공통 settings/network/cache, 한국어·영어 UI |
 | v1.2 | app-open/player 광고 및 premium 홍보 UI 제어 |
 | v1.3 | VocaDB metadata + AI BYOK 번역 core, 곡 제목·작품 상세 번역, YouTube 링크 공유 |
 | v1.4 | 공지 제목·본문 번역 |
@@ -120,7 +120,21 @@ translatedView -> 화면 표시 전용
 
 ## 4.1 P0-A: 설정에 Morphe 메뉴 추가
 
-**상태: READY, 첫 구현 항목**
+**상태: COMPLETE — v1.1 자동화·FULL DEX APK gate 통과, 기기 UI smoke는 별도 승인 사항**
+
+### 구현된 첫 수직 슬라이스
+
+- `SettingFragment`의 native toolbar overflow에 `Morphe` 항목을 추가했다.
+- marker Intent가 있을 때만 기존 `OssLicensesMenuActivity`를 Morphe 설정 host로 재사용한다.
+- framework `PreferenceFragment`에 runtime 기능 공통 switch와 진단 정보를 제공한다.
+- extension-owned `SharedPreferences` store와 일본어 기본/영어/한국어 locale catalog를 추가했다.
+- 원본 license Activity 진입은 marker가 없으면 기존 flow를 그대로 실행한다.
+- 앱 정보의 원본 `7.40.0` 표시에 `Morphe 1.1.0-dev.1`을 병기하고 Gradle patch version을 자동 추종한다.
+- optional branding patch로 launcher 앱 이름과 아이콘을 바꿀 수 있다.
+- branding 기본값은 일본어 원문 `ボカコレ`와 원본 아이콘이며, custom 값을 주지 않으면 resource pixel을 바꾸지 않는다.
+- 표시 언어를 시스템 기본값/일본어/영어/한국어로 저장하고 application lifecycle에서 적용한다.
+- 저장 공간 섹션에서 extension-owned cache 사용량을 확인하고 삭제할 수 있다.
+- HTTPS-only bounded client와 SHA-256·TTL·atomic-write cache 기반을 추가했지만 v1.1에서는 외부 요청을 만들지 않는다.
 
 ### 목표
 
@@ -133,6 +147,8 @@ VocaColle 설정 안에 `Morphe` 진입점을 추가하고 모든 후속 patch�
 1. `SettingFragment`의 기존 Compose 설정 목록에 원본 composable과 navigation callback을 이용해 row를 삽입한다.
 2. 1번 fingerprint가 버전 변화에 너무 취약하면 설정 toolbar의 native menu item으로 제공한다.
 3. 독립적인 별도 launcher Activity는 마지막 fallback으로만 사용한다.
+
+7.40.0 첫 구현은 Compose 내부 구조보다 fingerprint가 안정적인 **2번 toolbar menu**를 선택했다. Morphe MPE가 extension manifest/resource를 target APK에 병합하지 않으므로 새 Activity를 등록하지 않고, 이미 manifest에 등록된 `OssLicensesMenuActivity`를 marker Intent로만 분기해 theme·action bar·back navigation을 재사용한다. UI 문구와 preferences는 extension DEX에서 programmatic하게 구성한다.
 
 Morphe 상세 화면은 다음을 재사용한다.
 
@@ -171,16 +187,29 @@ Morphe 상세 화면은 다음을 재사용한다.
   - trend page size
   - offline 실험 기능
 
-### planned files
+### 주요 구현 파일
 
 - `patches/src/main/kotlin/io/github/ilikeadofai/vocacolle/patches/VocaColleMorpheSettingsPatch.kt`
 - `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/settings/MorpheSettingsFragment.java`
+- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/settings/MorpheSettingsLauncher.java`
+- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/settings/MorpheSettingsActivity.java`
+- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/settings/MorpheSettingsStrings.java`
 - `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/settings/SettingsStore.java`
 - `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/settings/SettingKeys.java`
-- `extensions/extension/src/main/res/xml/morphe_preferences.xml`
-- `extensions/extension/src/main/res/values/strings.xml`
-- `extensions/extension/src/main/res/values-en/strings.xml`
-- `extensions/extension/src/main/res/values-ko/strings.xml`
+- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/settings/MorphePatchInfo.java`
+- `patches/src/main/kotlin/io/github/ilikeadofai/vocacolle/patches/VocaColleBrandingPatch.kt`
+
+### 현재 검증 상태
+
+- Python catalog/renderer, extension unit, patch unit, patch metadata, MPP build 통과
+- 원본 7.40.0 APK에 settings-only/localization-only/full-default 3-way FULL DEX rebuild 통과
+- menu create/select hook, host Activity hook, extension class 포함을 최종 APK DEX에서 확인
+- settings-only 산출물의 `AndroidManifest.xml`과 `resources.arsc`가 원본과 동일하고 세 matrix APK의 zip alignment가 유효함을 확인
+- 한국어 patch를 포함한 full-default smoke에서 locale별 override 없이 `app_name=ボカコレ`가 유지됨을 확인
+- full-custom smoke에서 locale별 override 없이 custom `app_name`과 legacy/adaptive mdpi~xxxhdpi icon 15개 변경을 확인
+- apostrophe/quote 포함 앱 이름의 AAPT2 rebuild와 20 MiB/4096px 이전 bounded icon validation을 확인
+- settings+branding 통합 APK에서 AppInfo version formatter, menu create/select, host Activity hook을 함께 확인
+- Waydroid는 연결되어 있으나 설치는 사용자 앱 상태를 바꾸므로 명시적 허락 전까지 보류
 
 ### 완료 기준
 
@@ -191,24 +220,25 @@ Morphe 상세 화면은 다음을 재사용한다.
 
 ## 4.2 P0-B: 한국어·영어 UI localization
 
-**상태: READY**
+**상태: COMPLETE — v1.1 catalog/runtime/APK gate 통과**
 
-현재 한국어 patch 3개는 유지하면서 language-neutral catalog 구조로 확장한다.
+한국어 patch 3개의 이름과 symbol을 유지하면서 language-neutral catalog 구조로 확장했다.
 
 ### 단계
 
-1. `translations/ui/ko.csv` schema를 공통 catalog 형식으로 일반화한다.
-2. `translations/ui/en.csv`를 추가한다.
-3. static resource에 `values-ko`와 `values-en`을 함께 넣는다.
-4. hardcoded Compose 문자열도 언어별 lookup table을 사용한다.
-5. server UI whitelist도 `source -> {ko,en}` 구조로 바꾼다.
+1. `translations/ui/ko.csv` schema를 공통 catalog 형식으로 일반화했다.
+2. 1,619행의 `translations/ui/en.csv`를 추가했다.
+3. static resource에 `values-ko`와 `values-en`을 함께 넣었다.
+4. hardcoded Compose 문자열은 locale-aware lookup table을 사용한다.
+5. server UI whitelist는 일본어 passthrough와 영어/한국어 출력을 제공한다.
 6. Morphe 표시 언어가 `시스템`일 때 Android locale을 따른다.
-7. 강제 locale은 Android 13 application locale과 구버전 resource override를 각각 검증한 뒤 활성화한다.
+7. 강제 locale은 Android 13 application locale과 구버전 resource override를 각각 적용한다.
+8. 공통 renderer가 plural/array/markup/format token/newline/`formatted` metadata를 보존하는지 자동 검증한다.
 
 ### 호환성
 
 - v1.0의 `Korean static UI`, `Korean hardcoded UI`, `Korean native server UI` patch 이름은 당장 제거하지 않는다.
-- 새 통합 localization patch가 안정화되면 기존 patch를 deprecated alias로 전환한다.
+- 영어 static resource는 별도 `English static UI` patch로 추가하고 기존 한국어 patch 이름과 symbol을 유지한다.
 - 일본어 원본을 항상 선택할 수 있게 한다.
 
 ### 완료 기준
@@ -216,6 +246,13 @@ Morphe 상세 화면은 다음을 재사용한다.
 - 일본어/영어/한국어 세 locale에서 navigation, dialog, plural, array가 깨지지 않는다.
 - 재생 중 locale 변경 후 필요한 경우 한 번의 Activity recreation으로 반영된다.
 - server 문자열은 whitelist 외 항목을 번역하지 않는다.
+
+### 현재 검증 상태
+
+- en/ko 1,619행 catalog와 generated resource의 deterministic byte comparison 통과
+- format token, markup, escaped newline, duplicate identity, `formatted=false` 보존 test 통과
+- lifecycle locale hook과 hardcoded/server display-boundary hook의 exact 7.40.0 fingerprint 통과
+- settings-only/localization-only/full-default APK rebuild·서명·zip alignment 통과
 
 ## 4.3 P0-C: 광고 제거 기능
 
@@ -725,7 +762,8 @@ DRM, 만료 token, account entitlement를 우회해 영구 파일로 export하�
 4. API key encrypted storage
 5. 최소 `HttpURLConnection + org.json` client
 6. 영어 catalog 추가와 localization 구조 일반화
-7. ja/en/ko device smoke test
+7. 선택형 앱 이름·아이콘 branding과 AppInfo patch version 표시
+8. ja/en/ko device smoke test
 
 Sprint 1에서는 AI 호출이나 가사 기능까지 욕심내지 않는다. 설정값 저장, locale, navigation, extension 초기화가 안정적이어야 다음 기능이 모두 단순해진다.
 
@@ -740,9 +778,9 @@ Sprint 1에서는 AI 호출이나 가사 기능까지 욕심내지 않는다. �
 
 ## 12. 다음 구현 착수점
 
-가장 먼저 구현할 patch는 **`VocaColle Morphe settings`**다.
+다음 구현 착수점은 **v1.2 app-open 광고 decision hook과 player `isAdReserved` hook 식별**이다.
 
-이 patch가 완료돼야 광고 toggle, 번역 언어, AI provider/BYOK, 가사 source, cache 관리가 서로 독립적인 patch로 확장될 수 있다. 동시에 영어 catalog를 추가해 v1.1을 “설정 기반 + ko/en localization” release로 만드는 것이 가장 작은 완성 단위다.
+v1.1의 표시 언어·영어 catalog·runtime localization·공통 HTTPS/cache/storage 기반은 구현 및 자동 release gate를 통과했다. 실제 기기에서의 launcher cache, locale 전환, settings navigation acceptance는 코드 완료와 분리해 추적한다.
 
 ## 13. 외부 source 검증 기록
 

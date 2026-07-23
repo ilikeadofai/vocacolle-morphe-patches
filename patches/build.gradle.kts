@@ -26,13 +26,23 @@ dependencies {
     compileOnly(libs.gson)
     patchListGeneratorClasspath(libs.gson)
     testImplementation(kotlin("test"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 }
 
 tasks.test {
     useJUnitPlatform()
+    listOf("vocacolle.apk", "vocacolle.matrix.output").forEach { propertyName ->
+        System.getProperty(propertyName)?.let { propertyValue ->
+            systemProperty(propertyName, propertyValue)
+        }
+    }
     systemProperty(
         "vocacolle.translationCatalog",
         rootProject.file("translations/ui/ko.csv").absolutePath
+    )
+    systemProperty(
+        "vocacolle.englishTranslationCatalog",
+        rootProject.file("translations/ui/en.csv").absolutePath
     )
 }
 
