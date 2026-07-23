@@ -1,3 +1,9 @@
+## [1.1.0-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.0.1-dev.1...v1.1.0-dev.1) (2026-07-23)
+
+### ✨ New Features
+
+* complete VocaColle Morphe v1.1 ([23fa3f9](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/23fa3f9051177f747f4c250101cf86071f6ef052))
+
 ## [1.0.1-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.0.0...v1.0.1-dev.1) (2026-07-23)
 
 ### 🐛 Bug Fixes
