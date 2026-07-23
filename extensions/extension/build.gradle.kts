@@ -4,6 +4,18 @@ extension {
 
 android {
     namespace = "io.github.ilikeadofai.vocacolle.extension"
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    defaultConfig {
+        buildConfigField(
+            "String",
+            "MORPHE_PATCH_VERSION",
+            "\"${project.version}\""
+        )
+    }
 }
 
 dependencies {

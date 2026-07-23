@@ -2,7 +2,7 @@ group = "io.github.ilikeadofai.vocacolle"
 
 patches {
     about {
-        name = "VocaColle Translation Patches"
+        name = "ilikeadofai Patches"
         description = "Localization and metadata translation patches for VocaColle"
         source = "https://github.com/ilikeadofai/vocacolle-morphe-patches"
         author = "ilikeadofai"
@@ -26,13 +26,23 @@ dependencies {
     compileOnly(libs.gson)
     patchListGeneratorClasspath(libs.gson)
     testImplementation(kotlin("test"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 }
 
 tasks.test {
     useJUnitPlatform()
+    listOf("vocacolle.apk", "vocacolle.matrix.output").forEach { propertyName ->
+        System.getProperty(propertyName)?.let { propertyValue ->
+            systemProperty(propertyName, propertyValue)
+        }
+    }
     systemProperty(
         "vocacolle.translationCatalog",
         rootProject.file("translations/ui/ko.csv").absolutePath
+    )
+    systemProperty(
+        "vocacolle.englishTranslationCatalog",
+        rootProject.file("translations/ui/en.csv").absolutePath
     )
 }
 

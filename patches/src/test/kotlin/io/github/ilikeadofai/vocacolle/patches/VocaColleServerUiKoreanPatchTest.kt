@@ -7,14 +7,16 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class VocaColleServerUiKoreanPatchTest {
     @Test
-    fun `declares an opt-in native server UI patch for VocaColle 7_40_0`() {
+    fun `keeps the native server UI implementation hidden as a dependency`() {
         val patch = vocacolleServerUiKoreanPatch
 
-        assertEquals("Korean native server UI", patch.name)
-        assertFalse(patch.default)
+        assertNull(patch.name)
+        assertTrue(patch.default)
 
         val compatibility = assertNotNull(patch.compatibility).single()
         assertEquals("jp.nicovideo.nicobox", compatibility.packageName)
@@ -32,6 +34,7 @@ class VocaColleServerUiKoreanPatchTest {
         assertContains(patchSource, "addInstructions(")
         assertContains(patchSource, "index + 1")
         assertContains(patchSource, "return-object v\$register")
+        assertContains(patchSource, "UiLanguageTranslator;")
         assertFalse(patchSource.contains("addInstructions(index"))
     }
 }

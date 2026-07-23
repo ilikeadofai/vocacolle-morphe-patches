@@ -6,7 +6,7 @@ This pass translates every app-embedded, user-visible static UI resource identif
 VocaColle 7.40.0 (`jp.nicovideo.nicobox`, `versionCode 177`) while leaving server
 content and non-UI protocol data unchanged.
 
-The final opt-in patch set contains:
+The validated patch set contains:
 
 - **1,607 string resources**;
   - 1,118 Japanese app UI strings;

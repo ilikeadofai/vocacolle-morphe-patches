@@ -22,6 +22,10 @@ class VocaColleStaticKoreanUiCatalogTest {
             EXPECTED_APPROVED_COUNT,
             rows.count { it.getValue("ko_status") == "approved" }
         )
+        assertFalse(
+            rows.any { it.getValue("resource_type") == "string" && it.getValue("key") == "app_name" },
+            "Launcher branding must preserve the original Japanese app name by default"
+        )
 
         rows.forEach { row ->
             val source = catalogText(row.getValue("source"))
@@ -189,9 +193,9 @@ class VocaColleStaticKoreanUiCatalogTest {
     }
 
     private companion object {
-        const val EXPECTED_CATALOG_ROWS = 1620
-        const val EXPECTED_STRING_COUNT = 1607
-        const val EXPECTED_APPROVED_COUNT = 68
+        const val EXPECTED_CATALOG_ROWS = 1619
+        const val EXPECTED_STRING_COUNT = 1606
+        const val EXPECTED_APPROVED_COUNT = 67
         const val EXPECTED_STYLED_STRING_COUNT = 6
         const val EXPECTED_PLURALS_COUNT = 3
         const val EXPECTED_ARRAY_COUNT = 1

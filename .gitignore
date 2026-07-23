@@ -109,14 +109,23 @@ gradle-app.setting
 
 # Cache of project
 .gradletasknamecache
+.kotlin/
+
+# Python bytecode caches
+__pycache__/
+*.py[cod]
 
 # # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
 # gradle/wrapper/gradle-wrapper.properties
 
 # Potentially copyrighted test APK
 *.apk
+*.mpp
 *.keystore
 *.jks
+.env
+.env.*
+!.env.example
 
 # Local patching outputs and rollback data
 artifacts/

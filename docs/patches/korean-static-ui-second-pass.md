@@ -35,7 +35,8 @@ and composition rules are verified.
 - Untranslated strings continue to fall back to Japanese.
 - The APK's five DEX files remain byte-for-byte identical to the original.
 - No network, authentication, playback, database, or app-data code is changed.
-- The patch remains opt-in and restricted to `jp.nicovideo.nicobox` 7.40.0.
+- At the time of this pass the patch remained opt-in; current bundles select it
+  by default. The target remains restricted to `jp.nicovideo.nicobox` 7.40.0.
 
 ## Automated verification
 
