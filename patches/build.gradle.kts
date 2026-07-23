@@ -1,14 +1,13 @@
-group = "app.template"
+group = "io.github.ilikeadofai.vocacolle"
 
 patches {
-    // TODO: Update this section with your project details.
     about {
-        name = "UserXYZ Patches"
-        description = "Patches for apps I like"
-        source = "git@github.com:UserXYZ/morphe-patches.git"
-        author = "Awesome dev"
-        contact = "na"
-        website = "na"
+        name = "VocaColle Translation Patches"
+        description = "Localization and metadata translation patches for VocaColle"
+        source = "https://github.com/ilikeadofai/morphe-patches-template"
+        author = "ilikeadofai"
+        contact = "https://github.com/ilikeadofai"
+        website = "https://github.com/ilikeadofai/morphe-patches-template"
         license = "GPLv3"
     }
 }
@@ -26,6 +25,15 @@ val patchListGeneratorClasspath: Configuration by configurations.creating
 dependencies {
     compileOnly(libs.gson)
     patchListGeneratorClasspath(libs.gson)
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    useJUnitPlatform()
+    systemProperty(
+        "vocacolle.translationCatalog",
+        rootProject.file("translations/ui/ko.csv").absolutePath
+    )
 }
 
 tasks {

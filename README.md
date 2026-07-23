@@ -1,86 +1,96 @@
-# 👋🧩 Morphe Patches template
+# VocaColle Translation Patches
 
-Template repository for Morphe Patches.
+Unofficial localization and metadata translation patches for the Android app
+VocaColle (`jp.nicovideo.nicobox`). The patch bundle is compatible with the
+Morphe patcher but is not authored, maintained, or endorsed by the Morphe
+project or DWANGO.
 
-## ❓ About
+The current development target is VocaColle 7.40.0 (`versionCode 177`).
 
-Patches for apps I like.
-
-TODO: Update this about section with a brief introduction/summary about this repo and what it offers.
-
-## 🩹 Patches list
+## Patches
 
 <!-- PATCHES_START EXPANDED -->
 
-<!-- Do not modify this section by hand. The patch list is generated when release.yml creates a new release.
-     
-     If you wish for the patches list to be collapsed, then remove the word 'EXPANDED' from the comment tag above.
+### VocaColle compatibility probe
 
-     If you wish to manually keep this list updated then remove the PATCHES_START and PATCHES_END 
-     comment blocks entirely. -->
+An opt-in no-op patch that verifies package/version filtering, APK rebuilding,
+signing, split installation, and application startup before functional patches
+are introduced. It intentionally performs no resource or bytecode changes.
 
-#### A list of your patches will automatically be shown here after your first patches release is created.
+### Korean static UI
 
-&nbsp;
+Adds an opt-in Korean locale overlay for 1,607 user-visible strings, three
+plural resources, and one string array across the app and bundled UI libraries.
+The original default resources remain unchanged as the fallback.
 
-## 🚀 Get started
+### Korean hardcoded UI
 
-To start using this template, follow these steps:
+Translates eight method-scoped DEX literals used by the first-party Proseka
+screen and two bundled advertising UIs. Preview fixtures, server comparison
+values, search queries, social hashtags, filenames, and submission payloads are
+intentionally excluded.
 
-1. [Setup](https://github.com/MorpheApp/morphe-documentation/blob/main/docs/morphe-development/README.md) your development environment including adding a GitHub PAT as described [here](https://github.com/MorpheApp/morphe-patcher/blob/main/docs/2_1_setup.md#-prepare-the-environment).
-2. [Create a new repository using this template](https://github.com/new?template_name=morphe-patches-template&template_owner=MorpheApp). Select create a new repository, and **enable 'Include all branches'** 
-3. Enable "Allow GitHub Actions to create and approve pull requests" in your repo Settings > Actions > General > Workflow permissions
-4. Update the [build.gradle.kts](patches/build.gradle.kts) file (Specifically, the 
-   [group of the project](patches/build.gradle.kts#L1), and the [About](patches/build.gradle.kts#L6-L11))
-5. Update the [README.md](README.md) file to be specific of your repo, and update the links in the [issue templates](.github/ISSUE_TEMPLATE).
-6. Choose a name for your patches project. Keep in mind you must use a name that does not 
-   imply authorship by the Morphe open source project. If unsure, then simply name these
-   patches after yourself ("UserXYZ Morphe patches"). See the [NOTICE](NOTICE) for details. 
-7. (Optional): Add `patches-bundle.png` to the project if you want a custom icon to show in
-   Morphe Manager instead of your GitHub profile avatar.
+### Korean native server UI
 
-🎉 You are now ready to start creating patches!
+Translates a narrow whitelist of server-provided labels at native display
+boundaries. It currently covers the ranking navigation and stable push-topic
+titles while preserving unknown strings, song titles, creator names, URLs, and
+request identifiers.
 
-## 🧑‍💻 Usage
-
-To develop and release your Patches using this template:
-
-- Do all development work in the `dev` branch.
-- For local development work build your patches using the gradle task `./gradlew buildAndroid` to generate the mpp file found in `patches/build/libs/patches-*.mpp`. Apply your patches locally using Morphe CLI tool like any other patch bundle.
-- Always use [Semantic commit](https://kapeli.com/cheat_sheets/Semantic_Commits.docset/Contents/Resources/Documents/index) messages for commits. To keep it simple use only 3 commit message types: `feat: Added a new feature`, `fix: Some problem now fixed`, `chore: Random change you do not want in the user facing changelog`
-- Commits of `fix:` and `feat:` will automatically generate new pre-releases and `chore:` will not create a new release.
-- Users can apply your dev branch releases by enabling `pre-release` in Morphe Manager patch sources.
-- When your dev branch is ready and you want a stable release, merge dev branch to main (do not squash, and only merge).
-- **Always use semantic release (release.yml)**. Do not manually upload or creating releases by hand because many files must be updated and release.yml handles everything.
-
-## 🤓 Tips
-- See the [patcher documentation](https://github.com/MorpheApp/morphe-patcher/blob/main/docs/1_patcher_intro.md)
-  for more examples of creating patches and fingerprints.
-- Do not manually edit any generated files such as: `patches-list.json`, `patches-bundle.json`, `CHANGELOG.md`.
-  These files will be automatically updated in the release action.
-- Do not force push any semantic release commits or you will break the release. To 'redo' the last release then:
-  - Git drop the last dev/main semantic release commit you want to redo.
-  - Delete the release from the release area of this repo and delete the tag   
-  - Make any other changes you wish to do
-  - Force push dev/main branch
-  - A new replacement release will be created by `release.yml`
-
-
-<!-- The patches end tag is intentionally placed here so the first release will cleanup 
-     this readme of all developer instructions above. -->
 <!-- PATCHES_END -->
 
-#### How to use these patches
+See [the compatibility probe report](docs/patches/vocacolle-compatibility-probe.md)
+and the Korean UI reports for
+[the first pass](docs/patches/korean-static-ui-first-pass.md) and
+[the Home/Search second pass](docs/patches/korean-static-ui-second-pass.md), and
+[the full static UI pass](docs/patches/korean-full-static-ui.md), plus the
+[native server UI report](docs/patches/korean-native-server-ui.md)
+for the complete validation records.
 
-Click here to add these patches to Morphe: https://morphe.software/add-source?github=xyz-user/xyz-patches
+## Usage
 
-Or manually add this repository url as a patch source in Morphe: https://github.com/xyz-user/xyz-patches
+[Add this repository as a Morphe patch source](https://morphe.software/add-source?github=ilikeadofai/morphe-patches-template),
+or manually add:
 
-### 🛠️ Building
+```text
+https://github.com/ilikeadofai/morphe-patches-template
+```
 
-To build UserXYZ Patches,
-you can follow the [Morphe documentation](https://github.com/MorpheApp/morphe-documentation).
+The three Korean localization patches are opt-in and are intended to be enabled
+together. The compatibility probe is a no-op diagnostic patch and is not needed
+for normal use.
 
-## 📜 License
+## Development
 
-UserXYZ Patches are licensed under the [GNU General Public License v3.0](LICENSE)
+Configure the environment according to the
+[Morphe development documentation](https://github.com/MorpheApp/morphe-documentation/blob/main/docs/morphe-development/README.md),
+then run:
+
+```shell
+./gradlew :extensions:extension:testDebugUnitTest :patches:test buildAndroid
+```
+
+The generated bundle is written to:
+
+```text
+patches/build/libs/patches-*.mpp
+```
+
+Do not manually edit release-generated files such as `patches-list.json`,
+`patches-bundle.json`, or `CHANGELOG.md`.
+
+### Split APK warning
+
+The VocaColle 7.40.0 input used for development is a base APK. Both fresh installs
+and updates must submit the patched base together with the required ABI, language,
+and density splits in one package-manager transaction. All APKs must use the same
+signer. A successful Waydroid binder call is not sufficient evidence that Android
+accepted a base-only update; require the package manager's explicit `Success` result.
+
+Local APKs, keystores, patching artifacts, work files, and rollback snapshots
+are ignored by Git.
+
+## License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+See [NOTICE](NOTICE) for the upstream project-name restriction.

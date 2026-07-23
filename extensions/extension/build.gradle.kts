@@ -3,5 +3,9 @@ extension {
 }
 
 android {
-    namespace = "app.template.extension"
+    namespace = "io.github.ilikeadofai.vocacolle.extension"
+}
+
+dependencies {
+    testImplementation("junit:junit:4.13.2")
 }

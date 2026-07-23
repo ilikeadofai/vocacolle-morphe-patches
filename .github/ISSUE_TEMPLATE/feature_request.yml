@@ -1,17 +1,17 @@
 name: ⭐ Feature request
 description: Create a detailed request for a new feature.
 title: "feat: "
-labels: ["Feature request"]
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        # Template Patches template feature request
+        # VocaColle Translation Patches feature request
 
         Before creating a new feature request, please keep the following in mind:
 
-        - **Do not submit a duplicate feature request**: Search for existing feature requests [here](https://github.com/TEMPlATE/TEMPLATE-patches-template/issues?q=label%3A%22Feature+request%22).
-        - **Review the contribution guidelines**: Make sure your feature request adheres to it. You can find the guidelines [here](https://github.com/TEMPLATE/TEMPLATE-patches-template/blob/main/CONTRIBUTING.md).
+        - **Do not submit a duplicate feature request**: Search [existing feature requests](https://github.com/ilikeadofai/morphe-patches-template/issues?q=label%3Aenhancement) first.
+        - Explain whether the requested text is a static resource, hardcoded UI, server-provided native UI, or WebView content when known.
   - type: textarea
     attributes:
       label: Feature description

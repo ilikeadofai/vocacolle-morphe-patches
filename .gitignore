@@ -115,6 +115,13 @@ gradle-app.setting
 
 # Potentially copyrighted test APK
 *.apk
+*.keystore
+*.jks
+
+# Local patching outputs and rollback data
+artifacts/
+backups/
+work/
 
 # Ignore vscode config
 .vscode/
