@@ -1,3 +1,9 @@
+## [1.0.0-dev.3](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.0.0-dev.2...v1.0.0-dev.3) (2026-07-23)
+
+### 🐛 Bug Fixes
+
+* update repository URLs after rename ([c54ecd4](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/c54ecd4bbbb89b8d096fa56a88f3b3e4786a7675))
+
 ## [1.0.0-dev.2](https://github.com/ilikeadofai/morphe-patches-template/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2026-07-23)
 
 ### 🐛 Bug Fixes
