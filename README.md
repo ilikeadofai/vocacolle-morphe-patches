@@ -37,9 +37,9 @@ patch with three independent runtime toggles that all default to OFF.
 ## Current patches
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.1.0](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.1.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;5 patches total
+> **[v1.2.0-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.2.0-dev.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
 <details open>
-<summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;5 patches</summary>
+<summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;6 patches</summary>
 <br>
 
 **🎯 Supported versions:**
@@ -53,6 +53,7 @@ patch with three independent runtime toggles that all default to OFF.
 | [English UI](#english-ui) | Adds complete English static, hardcoded, and server-provided UI localization. |  |
 | [Korean UI](#korean-ui) | Adds complete Korean static, hardcoded, and server-provided UI localization. |  |
 | [VocaColle Morphe settings](#vocacolle-morphe-settings) | Adds display-language, cache, diagnostic, and patch-version controls to native Morphe settings. |  |
+| [VocaColle ad control](#vocacolle-ad-control) | Adds opt-in controls for VocaColle advertising surfaces. |  |
 | [VocaColle compatibility probe](#vocacolle-compatibility-probe) | Verifies that VocaColle 7.40.0 can be decoded, rebuilt, and signed without changing app behavior. |  |
 
 </details>

@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.1.0",
+  "version": "1.2.0-dev.1",
   "patches": [
     {
       "name": "Customize VocaColle branding",
@@ -111,6 +111,32 @@
       "name": "VocaColle Morphe settings",
       "description": "Adds display-language, cache, diagnostic, and patch-version controls to native Morphe settings.",
       "default": true,
+      "dependencies": [],
+      "compatiblePackages": [
+        {
+          "packageName": "jp.nicovideo.nicobox",
+          "name": "VocaColle",
+          "description": null,
+          "apkFileType": "APK",
+          "appIconColor": null,
+          "signatures": null,
+          "targets": [
+            {
+              "version": "7.40.0",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
+      "name": "VocaColle ad control",
+      "description": "Adds opt-in controls for VocaColle advertising surfaces.",
+      "default": false,
       "dependencies": [],
       "compatiblePackages": [
         {

@@ -1,3 +1,9 @@
+## [1.2.0-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0...v1.2.0-dev.1) (2026-07-23)
+
+### ✨ New Features
+
+* add opt-in ad controls ([a4b3374](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/a4b337467c2d65a23dc269e5047ecb741004b493))
+
 ## [1.1.0](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.0.0...v1.1.0) (2026-07-23)
 
 ### 🐛 Bug Fixes
