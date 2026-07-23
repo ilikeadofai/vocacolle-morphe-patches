@@ -8,7 +8,7 @@ private val KOREAN_RESOURCE_FILES = listOf("strings.xml", "plurals.xml", "arrays
 
 @Suppress("unused")
 val vocacolleStaticKoreanUiPatch = resourcePatch(
-    name = "Korean static UI",
+    name = null,
     description = "Adds reviewed Korean resources for all app and library static UI strings, plurals, and arrays.",
     default = true
 ) {

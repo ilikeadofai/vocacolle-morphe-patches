@@ -7,14 +7,15 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class VocaColleServerUiKoreanPatchTest {
     @Test
-    fun `declares a default-enabled native server UI patch for VocaColle 7_40_0`() {
+    fun `keeps the native server UI implementation hidden as a dependency`() {
         val patch = vocacolleServerUiKoreanPatch
 
-        assertEquals("Korean native server UI", patch.name)
+        assertNull(patch.name)
         assertTrue(patch.default)
 
         val compatibility = assertNotNull(patch.compatibility).single()

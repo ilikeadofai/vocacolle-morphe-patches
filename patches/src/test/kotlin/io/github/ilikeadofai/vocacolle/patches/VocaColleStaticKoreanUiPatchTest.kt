@@ -8,11 +8,19 @@ import kotlin.test.assertTrue
 
 class VocaColleStaticKoreanUiPatchTest {
     @Test
-    fun `declares a default-enabled Korean static UI patch for VocaColle 7_40_0`() {
-        val patch = vocacolleStaticKoreanUiPatch
+    fun `declares one default-enabled Korean UI patch for VocaColle 7_40_0`() {
+        val patch = vocacolleKoreanUiPatch
 
-        assertEquals("Korean static UI", patch.name)
+        assertEquals("Korean UI", patch.name)
         assertTrue(patch.default)
+        assertEquals(
+            setOf(
+                vocacolleStaticKoreanUiPatch,
+                vocacolleHardcodedKoreanUiPatch,
+                vocacolleServerUiKoreanPatch
+            ),
+            patch.dependencies
+        )
 
         val compatibility = assertNotNull(patch.compatibility).single()
         assertEquals("jp.nicovideo.nicobox", compatibility.packageName)

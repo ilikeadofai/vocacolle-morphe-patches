@@ -8,7 +8,7 @@ private val ENGLISH_RESOURCE_FILES = listOf("strings.xml", "plurals.xml", "array
 
 @Suppress("unused")
 val vocacolleStaticEnglishUiPatch = resourcePatch(
-    name = "English static UI",
+    name = null,
     description = "Adds reviewed English resources for all app and library static UI strings, plurals, and arrays.",
     default = true
 ) {

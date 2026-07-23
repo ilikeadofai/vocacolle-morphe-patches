@@ -2,7 +2,7 @@ group = "io.github.ilikeadofai.vocacolle"
 
 patches {
     about {
-        name = "VocaColle Translation Patches"
+        name = "ilikeadofai Patches"
         description = "Localization and metadata translation patches for VocaColle"
         source = "https://github.com/ilikeadofai/vocacolle-morphe-patches"
         author = "ilikeadofai"

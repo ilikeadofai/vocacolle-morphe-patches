@@ -70,7 +70,7 @@ private object NicoPushDescriptionFingerprint : Fingerprint(
 
 @Suppress("unused")
 val vocacolleServerUiKoreanPatch = bytecodePatch(
-    name = "Korean native server UI",
+    name = null,
     description = "Localizes whitelisted server-provided labels only at native UI display boundaries.",
     default = true
 ) {

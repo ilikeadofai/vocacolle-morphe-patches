@@ -30,10 +30,8 @@ class VocaColleV11ApkMatrixTest {
 
         val settings = setOf<Patch<*>>(vocacolleMorpheSettingsPatch)
         val localization = setOf<Patch<*>>(
-            vocacolleStaticKoreanUiPatch,
-            vocacolleStaticEnglishUiPatch,
-            vocacolleHardcodedKoreanUiPatch,
-            vocacolleServerUiKoreanPatch
+            vocacolleKoreanUiPatch,
+            vocacolleEnglishUiPatch
         )
         val variants = linkedMapOf(
             "settings-only" to settings,

@@ -57,7 +57,7 @@ private object ProsekaTopContentFingerprint : Fingerprint(
 
 @Suppress("unused")
 val vocacolleHardcodedKoreanUiPatch = bytecodePatch(
-    name = "Korean hardcoded UI",
+    name = null,
     description = "Localizes production Compose and third-party UI literals using the selected display language.",
     default = true
 ) {
