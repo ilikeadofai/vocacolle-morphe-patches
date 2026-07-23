@@ -1,3 +1,9 @@
+## [1.1.0-dev.5](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0-dev.4...v1.1.0-dev.5) (2026-07-23)
+
+### 🐛 Bug Fixes
+
+* add native Morphe settings row ([7a6ac24](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/7a6ac24c3b5bbe869d2710ea8b62788435687fbe))
+
 ## [1.1.0-dev.4](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0-dev.3...v1.1.0-dev.4) (2026-07-23)
 
 ### ✨ New Features
