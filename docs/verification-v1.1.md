@@ -1,7 +1,7 @@
 # VocaColle Morphe v1.1 verification
 
 Date: 2026-07-23
-Patch version: `1.1.0-dev.1`
+Patch version: `1.1.0-dev.2` release candidate (local pre-release build metadata: `1.1.0-dev.1`)
 Target: `jp.nicovideo.nicobox` `7.40.0` (`versionCode=177`)
 
 This document records the local release gate used before pushing v1.1 to the
@@ -18,7 +18,7 @@ python3 -m unittest discover -s tools/tests -p 'test_*.py'
 Result:
 
 - Python catalog/generator tests: 16 passed
-- Extension JVM tests: 46 passed, 0 failed, 0 skipped
+- Extension JVM tests: 54 passed, 0 failed, 0 skipped
 - Patch JVM tests with the actual APK matrix enabled: 20 passed, 0 failed, 0 skipped
 - Android lint: passed with 0 errors
 - MPP build: passed
@@ -27,7 +27,7 @@ The generated MPP contained seven compatible VocaColle patches for 7.40.0.
 The final local pre-push MPP SHA-256 was:
 
 ```text
-03c5cbb7700f3f9783c07e7693e4b177627bfd7aa05cc4c980f6d57778a2e7e3
+96ebc492c5370494c10fb1f588e87c95a0c20b447863d511784dbf2c10b60b33
 ```
 
 The hash identifies this local build only. ZIP timestamps and the release
@@ -60,9 +60,9 @@ and passed `apksigner verify` and `zipalign -c -P 16 4`. All retained package
 Test-signed matrix SHA-256 values:
 
 ```text
-eeab0a733c65372ebe5caedaec94aa15ef69009ac496b9517c1a3491d14f8e61  full-default-signed.apk
-48d53fc15a4331485855c4a9926eb4f34d7cab154da872a260b807e3c2fc85e4  localization-only-signed.apk
-e3ed7bf379287dd96d4f58a44f9b7d557e628468de1db4e5083254e37b71a274  settings-only-signed.apk
+1cc0fe80e9511ba33c04e9ba2812a241be4e68473855d5e3cca78c5f4229a73c  full-default-signed.apk
+043753af1039847eb8594c96d0023f622d13415b8ada477ecc074c2016237797  localization-only-signed.apk
+798559fc31ee48bd29de66e1870d4aaa38812ae21a819b6e4cc1abe69268c6c3  settings-only-signed.apk
 ```
 
 Additional inspection confirmed:

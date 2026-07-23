@@ -5,9 +5,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Objects;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.net.ssl.HttpsURLConnection;
 
 /** Small fail-closed HTTPS GET client for extension-owned endpoints. */
@@ -20,6 +25,7 @@ public final class MorpheHttpClient {
     public static final int DEFAULT_MAX_BODY_BYTES = 1024 * 1024;
     public static final String USER_AGENT = "Morphe/1.1";
     public static final String ACCEPT = "application/json";
+    private static final ScheduledThreadPoolExecutor DEADLINE_EXECUTOR = createDeadlineExecutor();
 
     public interface ConnectionFactory {
         HttpsURLConnection open(URL url) throws IOException;
@@ -81,7 +87,7 @@ public final class MorpheHttpClient {
                     : connection.getInputStream();
             byte[] body;
             try (InputStream input = stream) {
-                body = input == null ? new byte[0] : readBounded(input);
+                body = input == null ? new byte[0] : readWithDeadline(input, connection);
             }
             return new Response(status, connection.getContentType(), body);
         } finally {
@@ -100,6 +106,25 @@ public final class MorpheHttpClient {
         connection.setRequestProperty("Accept", ACCEPT);
     }
 
+    private byte[] readWithDeadline(InputStream input, HttpsURLConnection connection)
+            throws IOException {
+        AtomicBoolean deadlineExceeded = new AtomicBoolean(false);
+        ScheduledFuture<?> deadline = DEADLINE_EXECUTOR.schedule(() -> {
+            deadlineExceeded.set(true);
+            connection.disconnect();
+        }, readTimeoutMillis, TimeUnit.MILLISECONDS);
+        try {
+            byte[] body = readBounded(input);
+            if (deadlineExceeded.get()) throw deadlineExceeded(null);
+            return body;
+        } catch (IOException failure) {
+            if (deadlineExceeded.get()) throw deadlineExceeded(failure);
+            throw failure;
+        } finally {
+            deadline.cancel(false);
+        }
+    }
+
     private byte[] readBounded(InputStream input) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream(Math.min(maxBodyBytes, 8192));
         byte[] buffer = new byte[Math.min(maxBodyBytes + 1, 8192)];
@@ -113,6 +138,23 @@ public final class MorpheHttpClient {
             }
             output.write(buffer, 0, read);
         }
+    }
+
+    private SocketTimeoutException deadlineExceeded(IOException cause) {
+        SocketTimeoutException timeout = new SocketTimeoutException(
+                "Response body exceeded total deadline of " + readTimeoutMillis + " ms");
+        if (cause != null) timeout.initCause(cause);
+        return timeout;
+    }
+
+    private static ScheduledThreadPoolExecutor createDeadlineExecutor() {
+        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, task -> {
+            Thread thread = new Thread(task, "morphe-http-deadline");
+            thread.setDaemon(true);
+            return thread;
+        });
+        executor.setRemoveOnCancelPolicy(true);
+        return executor;
     }
 
     private static void validateUrl(URL url) {

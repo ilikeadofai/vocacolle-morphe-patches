@@ -5,8 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
 import org.junit.Test;
 
 public class MorpheSettingsFragmentTest {
@@ -60,6 +64,78 @@ public class MorpheSettingsFragmentTest {
         assertTrue(MorpheSettingsFragment.handleClearCache(success));
         assertTrue(success.cleared);
         assertFalse(MorpheSettingsFragment.handleClearCache(failure));
+    }
+
+    @Test
+    public void cacheSizeRunsOffThreadAndPostsResultToUiExecutor() {
+        QueuedExecutor background = new QueuedExecutor();
+        QueuedExecutor ui = new QueuedExecutor();
+        RecordingCacheIoActions cache = new RecordingCacheIoActions(42L, false);
+        RecordingCacheResult result = new RecordingCacheResult();
+
+        MorpheSettingsFragment.loadCacheSizeAsync(background, ui, cache, result);
+
+        assertFalse(cache.sizeRead);
+        assertFalse(result.completed);
+        background.runNext();
+        assertTrue(cache.sizeRead);
+        assertFalse(result.completed);
+        ui.runNext();
+        assertTrue(result.completed);
+        assertTrue(result.success);
+        assertEquals(42L, result.sizeBytes);
+    }
+
+    @Test
+    public void cacheClearFailureIsReportedOnlyOnUiExecutor() {
+        QueuedExecutor background = new QueuedExecutor();
+        QueuedExecutor ui = new QueuedExecutor();
+        RecordingCacheIoActions cache = new RecordingCacheIoActions(21L, true);
+        RecordingCacheResult result = new RecordingCacheResult();
+
+        MorpheSettingsFragment.clearCacheAsync(background, ui, cache, result);
+
+        assertFalse(cache.cleared);
+        background.runNext();
+        assertTrue(cache.cleared);
+        assertTrue(cache.sizeRead);
+        assertFalse(result.completed);
+        ui.runNext();
+        assertTrue(result.completed);
+        assertFalse(result.success);
+        assertEquals(21L, result.sizeBytes);
+    }
+
+    @Test
+    public void cacheExecutorUsesAFiniteQueue() {
+        ThreadPoolExecutor executor = MorpheSettingsFragment.createCacheExecutor();
+        try {
+            assertTrue(executor.getQueue().remainingCapacity() < Integer.MAX_VALUE);
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    public void rejectedCacheWorkPostsFailureToUiExecutor() {
+        Executor rejecting = task -> {
+            throw new RejectedExecutionException("full");
+        };
+        QueuedExecutor ui = new QueuedExecutor();
+        RecordingCacheResult result = new RecordingCacheResult();
+
+        MorpheSettingsFragment.loadCacheSizeAsync(
+                rejecting,
+                ui,
+                new RecordingCacheIoActions(42L, false),
+                result
+        );
+
+        assertFalse(result.completed);
+        ui.runNext();
+        assertTrue(result.completed);
+        assertFalse(result.success);
+        assertEquals(0L, result.sizeBytes);
     }
 
     private static final class RecordingActions
@@ -130,6 +206,58 @@ public class MorpheSettingsFragmentTest {
                 throw new IOException("expected");
             }
             cleared = true;
+        }
+    }
+
+    private static final class QueuedExecutor implements Executor {
+        private final ArrayDeque<Runnable> tasks = new ArrayDeque<>();
+
+        @Override
+        public void execute(Runnable task) {
+            tasks.add(task);
+        }
+
+        private void runNext() {
+            tasks.remove().run();
+        }
+    }
+
+    private static final class RecordingCacheIoActions
+            implements MorpheSettingsFragment.CacheIoActions {
+        private final long sizeBytes;
+        private final boolean failClear;
+        private boolean sizeRead;
+        private boolean cleared;
+
+        private RecordingCacheIoActions(long sizeBytes, boolean failClear) {
+            this.sizeBytes = sizeBytes;
+            this.failClear = failClear;
+        }
+
+        @Override
+        public long sizeBytes() {
+            sizeRead = true;
+            return sizeBytes;
+        }
+
+        @Override
+        public void clear() throws IOException {
+            cleared = true;
+            if (failClear) throw new IOException("expected");
+        }
+    }
+
+    private static final class RecordingCacheResult
+            implements MorpheSettingsFragment.CacheResultActions {
+        private boolean completed;
+        private boolean success;
+        private long sizeBytes;
+
+        @Override
+        public void complete(boolean success, long sizeBytes) {
+            completed = true;
+            this.success = success;
+            this.sizeBytes = sizeBytes;
         }
     }
 }

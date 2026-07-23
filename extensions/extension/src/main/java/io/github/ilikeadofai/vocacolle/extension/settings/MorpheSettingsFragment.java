@@ -11,11 +11,19 @@ import android.preference.SwitchPreference;
 import android.widget.Toast;
 import io.github.ilikeadofai.vocacolle.extension.cache.MorpheCache;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.Locale;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /** Preferences for runtime features supplied by the VocaColle Morphe extension. */
 @SuppressWarnings("deprecation")
 public final class MorpheSettingsFragment extends PreferenceFragment {
+    private static final ThreadPoolExecutor CACHE_EXECUTOR = createCacheExecutor();
+
     private SettingsStore settingsStore;
     private SwitchPreference runtimeFeaturesPreference;
 
@@ -84,24 +92,46 @@ public final class MorpheSettingsFragment extends PreferenceFragment {
         screen.addPreference(storage);
 
         final MorpheCache cache = openCache(activity);
+        final CacheIoActions cacheActions = cache == null ? null : new CacheIoActions() {
+            @Override
+            public long sizeBytes() throws IOException {
+                return cache.sizeBytes();
+            }
+
+            @Override
+            public void clear() throws IOException {
+                cache.clear();
+            }
+        };
         Preference cacheInfo = new Preference(activity);
         cacheInfo.setTitle(strings.cacheTitle);
         cacheInfo.setSelectable(false);
-        refreshCacheSummary(cacheInfo, cache, strings);
+        if (cacheActions == null) {
+            cacheInfo.setSummary(strings.cacheClearFailedMessage);
+        } else {
+            cacheInfo.setSummary(formatCacheSummary(0L, strings));
+            loadCacheSizeAsync(
+                    CACHE_EXECUTOR,
+                    weakUiExecutor(activity),
+                    cacheActions,
+                    new CacheUiResult(this, activity, cacheInfo, null, strings, false)
+            );
+        }
         storage.addPreference(cacheInfo);
 
         Preference clearCache = new Preference(activity);
         clearCache.setTitle(strings.clearCacheTitle);
         clearCache.setSummary(strings.clearCacheSummary);
-        clearCache.setEnabled(cache != null);
+        clearCache.setEnabled(cacheActions != null);
         clearCache.setOnPreferenceClickListener(preference -> {
-            boolean cleared = cache != null && handleClearCache(cache::clear);
-            refreshCacheSummary(cacheInfo, cache, strings);
-            Toast.makeText(
-                    activity,
-                    cleared ? strings.cacheClearedMessage : strings.cacheClearFailedMessage,
-                    Toast.LENGTH_SHORT
-            ).show();
+            if (cacheActions == null) return true;
+            clearCache.setEnabled(false);
+            clearCacheAsync(
+                    CACHE_EXECUTOR,
+                    weakUiExecutor(activity),
+                    cacheActions,
+                    new CacheUiResult(this, activity, cacheInfo, clearCache, strings, true)
+            );
             return true;
         });
         storage.addPreference(clearCache);
@@ -156,6 +186,81 @@ public final class MorpheSettingsFragment extends PreferenceFragment {
         }
     }
 
+    static ThreadPoolExecutor createCacheExecutor() {
+        return new ThreadPoolExecutor(
+                1,
+                1,
+                0L,
+                TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(8),
+                task -> {
+                    Thread thread = new Thread(task, "morphe-cache-io");
+                    thread.setDaemon(true);
+                    return thread;
+                },
+                new ThreadPoolExecutor.AbortPolicy()
+        );
+    }
+
+    private static Executor weakUiExecutor(Activity activity) {
+        WeakReference<Activity> activityReference = new WeakReference<>(activity);
+        return task -> {
+            Activity currentActivity = activityReference.get();
+            if (currentActivity != null) currentActivity.runOnUiThread(task);
+        };
+    }
+
+    static void loadCacheSizeAsync(
+            Executor backgroundExecutor,
+            Executor uiExecutor,
+            CacheIoActions cache,
+            CacheResultActions result
+    ) {
+        runCacheOperationAsync(backgroundExecutor, uiExecutor, cache, result, false);
+    }
+
+    static void clearCacheAsync(
+            Executor backgroundExecutor,
+            Executor uiExecutor,
+            CacheIoActions cache,
+            CacheResultActions result
+    ) {
+        runCacheOperationAsync(backgroundExecutor, uiExecutor, cache, result, true);
+    }
+
+    private static void runCacheOperationAsync(
+            Executor backgroundExecutor,
+            Executor uiExecutor,
+            CacheIoActions cache,
+            CacheResultActions result,
+            boolean clearFirst
+    ) {
+        Runnable work = () -> {
+            boolean success = true;
+            if (clearFirst) {
+                try {
+                    cache.clear();
+                } catch (IOException | RuntimeException failure) {
+                    success = false;
+                }
+            }
+            long sizeBytes = 0L;
+            try {
+                sizeBytes = cache.sizeBytes();
+            } catch (IOException | RuntimeException failure) {
+                success = false;
+            }
+            final boolean completedSuccessfully = success;
+            final long completedSizeBytes = sizeBytes;
+            uiExecutor.execute(() -> result.complete(completedSuccessfully, completedSizeBytes));
+        };
+        try {
+            backgroundExecutor.execute(work);
+        } catch (RejectedExecutionException rejected) {
+            uiExecutor.execute(() -> result.complete(false, 0L));
+        }
+    }
+
     static String formatCacheSize(long bytes) {
         long safeBytes = Math.max(0L, bytes);
         if (safeBytes < 1024L) {
@@ -178,21 +283,61 @@ public final class MorpheSettingsFragment extends PreferenceFragment {
         }
     }
 
-    private static void refreshCacheSummary(
-            Preference cacheInfo,
-            MorpheCache cache,
-            MorpheSettingsStrings strings
-    ) {
-        if (cache == null) {
-            cacheInfo.setSummary(strings.cacheClearFailedMessage);
-            return;
-        }
-        cacheInfo.setSummary(String.format(
+    private static String formatCacheSummary(long sizeBytes, MorpheSettingsStrings strings) {
+        return String.format(
                 Locale.ROOT,
                 strings.cacheSummaryFormat,
-                formatCacheSize(cache.sizeBytes()),
+                formatCacheSize(sizeBytes),
                 formatCacheSize(MorpheCache.DEFAULT_MAX_TOTAL_BYTES)
-        ));
+        );
+    }
+
+    private static final class CacheUiResult implements CacheResultActions {
+        private final WeakReference<MorpheSettingsFragment> fragmentReference;
+        private final WeakReference<Activity> activityReference;
+        private final WeakReference<Preference> cacheInfoReference;
+        private final WeakReference<Preference> clearCacheReference;
+        private final MorpheSettingsStrings strings;
+        private final boolean showToast;
+
+        private CacheUiResult(
+                MorpheSettingsFragment fragment,
+                Activity activity,
+                Preference cacheInfo,
+                Preference clearCache,
+                MorpheSettingsStrings strings,
+                boolean showToast
+        ) {
+            fragmentReference = new WeakReference<>(fragment);
+            activityReference = new WeakReference<>(activity);
+            cacheInfoReference = new WeakReference<>(cacheInfo);
+            clearCacheReference = new WeakReference<>(clearCache);
+            this.strings = strings;
+            this.showToast = showToast;
+        }
+
+        @Override
+        public void complete(boolean success, long sizeBytes) {
+            MorpheSettingsFragment fragment = fragmentReference.get();
+            Activity activity = activityReference.get();
+            Preference cacheInfo = cacheInfoReference.get();
+            if (fragment == null || activity == null || cacheInfo == null
+                    || fragment.getActivity() != activity) {
+                return;
+            }
+            cacheInfo.setSummary(success || showToast
+                    ? formatCacheSummary(sizeBytes, strings)
+                    : strings.cacheClearFailedMessage);
+            Preference clearCache = clearCacheReference.get();
+            if (clearCache != null) clearCache.setEnabled(true);
+            if (showToast) {
+                Toast.makeText(
+                        activity,
+                        success ? strings.cacheClearedMessage : strings.cacheClearFailedMessage,
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        }
     }
 
     interface LanguageChangeActions {
@@ -203,5 +348,15 @@ public final class MorpheSettingsFragment extends PreferenceFragment {
 
     interface CacheActions {
         void clear() throws IOException;
+    }
+
+    interface CacheIoActions {
+        long sizeBytes() throws IOException;
+
+        void clear() throws IOException;
+    }
+
+    interface CacheResultActions {
+        void complete(boolean success, long sizeBytes);
     }
 }

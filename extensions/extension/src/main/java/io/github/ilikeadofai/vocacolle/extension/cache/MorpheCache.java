@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 public final class MorpheCache {
     public static final long DEFAULT_MAX_ENTRY_BYTES = 2L * 1024L * 1024L;
     public static final long DEFAULT_MAX_TOTAL_BYTES = 64L * 1024L * 1024L;
+    public static final int DEFAULT_MAX_ENTRIES = 256;
     private static final int MAGIC = 0x4d434143; // MCAC
     private static final int VERSION = 1;
     private static final int HEADER_BYTES = 4 * 3 + 8;
@@ -32,10 +33,13 @@ public final class MorpheCache {
 
     public interface Clock { long nowMillis(); }
 
+    interface FileDeleter { boolean delete(File file); }
+
     private final File root;
     private final long maxEntryBytes;
     private final long maxTotalBytes;
     private final Clock clock;
+    private final FileDeleter fileDeleter;
 
     public static MorpheCache openDefault(File appCacheDirectory) throws IOException {
         Objects.requireNonNull(appCacheDirectory, "appCacheDirectory");
@@ -51,8 +55,19 @@ public final class MorpheCache {
     }
 
     public MorpheCache(File root, long maxEntryBytes, long maxTotalBytes, Clock clock) throws IOException {
+        this(root, maxEntryBytes, maxTotalBytes, clock, File::delete);
+    }
+
+    MorpheCache(
+            File root,
+            long maxEntryBytes,
+            long maxTotalBytes,
+            Clock clock,
+            FileDeleter fileDeleter
+    ) throws IOException {
         this.root = Objects.requireNonNull(root, "root").getCanonicalFile();
         this.clock = Objects.requireNonNull(clock, "clock");
+        this.fileDeleter = Objects.requireNonNull(fileDeleter, "fileDeleter");
         if (maxEntryBytes <= 0 || maxEntryBytes > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("maxEntryBytes must be between 1 and Integer.MAX_VALUE");
         }
@@ -127,12 +142,11 @@ public final class MorpheCache {
             deleteRequired(file);
         }
         File[] files = root.listFiles((directory, name) -> name.startsWith("morphe-") && name.endsWith(".tmp"));
-        if (files != null) {
-            for (File file : files) deleteRequired(file);
-        }
+        if (files == null) throw new IOException("Could not enumerate temporary cache files");
+        for (File file : files) deleteRequired(file);
     }
 
-    public synchronized long sizeBytes() {
+    public synchronized long sizeBytes() throws IOException {
         long total = 0;
         for (File file : entryFiles()) total += file.length();
         return total;
@@ -177,9 +191,25 @@ public final class MorpheCache {
     }
 
     private void evictOldest(File protectedEntry) throws IOException {
-        long total = sizeBytes();
-        if (total <= maxTotalBytes) return;
-        List<File> candidates = new ArrayList<>(entryFiles());
+        try {
+            enforceLimits(protectedEntry);
+        } catch (IOException failure) {
+            try {
+                deleteRequired(protectedEntry);
+            } catch (IOException cleanupFailure) {
+                failure.addSuppressed(cleanupFailure);
+            }
+            throw failure;
+        }
+    }
+
+    private void enforceLimits(File protectedEntry) throws IOException {
+        List<File> managedEntries = entryFiles();
+        long total = 0L;
+        for (File file : managedEntries) total += file.length();
+        int managedCount = managedEntries.size();
+        if (total <= maxTotalBytes && managedCount <= DEFAULT_MAX_ENTRIES) return;
+        List<File> candidates = new ArrayList<>(managedEntries);
         candidates.remove(protectedEntry);
         Collections.sort(candidates, new Comparator<File>() {
             @Override
@@ -191,23 +221,22 @@ public final class MorpheCache {
             }
         });
         for (File candidate : candidates) {
-            if (total <= maxTotalBytes) break;
+            if (total <= maxTotalBytes && managedCount <= DEFAULT_MAX_ENTRIES) break;
             long length = candidate.length();
             deleteRequired(candidate);
             total -= length;
+            managedCount--;
         }
-        if (total > maxTotalBytes) {
-            deleteRequired(protectedEntry);
-            throw new IOException("Could not enforce total cache size limit");
+        if (total > maxTotalBytes || managedCount > DEFAULT_MAX_ENTRIES) {
+            throw new IOException("Could not enforce cache limits");
         }
     }
 
-    private List<File> entryFiles() {
+    private List<File> entryFiles() throws IOException {
         File[] files = root.listFiles((directory, name) -> ENTRY_NAME.matcher(name).matches());
+        if (files == null) throw new IOException("Could not enumerate cache entries");
         List<File> result = new ArrayList<>();
-        if (files != null) {
-            for (File file : files) if (file.isFile()) result.add(file);
-        }
+        for (File file : files) if (file.isFile()) result.add(file);
         return result;
     }
 
@@ -217,8 +246,8 @@ public final class MorpheCache {
         return new File(root, sha256(namespace, key) + ".cache");
     }
 
-    private static void deleteRequired(File file) throws IOException {
-        if (file.exists() && !file.delete()) {
+    private void deleteRequired(File file) throws IOException {
+        if (file.exists() && !fileDeleter.delete(file)) {
             throw new IOException("Could not delete cache entry");
         }
     }

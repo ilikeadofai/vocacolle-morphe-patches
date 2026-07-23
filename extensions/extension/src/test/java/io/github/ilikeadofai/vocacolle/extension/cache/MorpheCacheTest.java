@@ -88,6 +88,18 @@ public class MorpheCacheTest {
     }
 
     @Test
+    public void failedDirectoryEnumerationIsReported() throws Exception {
+        File root = temporaryFolder.newFolder("enumeration-failure");
+        MorpheCache cache = new MorpheCache(root, 100, 1000, new MutableClock(1000L));
+        assertTrue(root.delete());
+        try (FileOutputStream output = new FileOutputStream(root)) {
+            output.write(1);
+        }
+
+        assertThrows(java.io.IOException.class, cache::sizeBytes);
+    }
+
+    @Test
     public void oversizedEntryIsRejectedWithoutLeavingFiles() throws Exception {
         File root = temporaryFolder.newFolder("oversized");
         MorpheCache cache = new MorpheCache(root, 3, 100, new MutableClock(1000L));
@@ -112,6 +124,51 @@ public class MorpheCacheTest {
         assertArrayEquals(new byte[] {2, 2, 2, 2}, cache.get("ns", "middle"));
         assertArrayEquals(new byte[] {3, 3, 3, 3}, cache.get("ns", "newest"));
         assertTrue(cache.sizeBytes() <= 48L);
+    }
+
+    @Test
+    public void managedEntryCountEvictsOldestFiles() throws Exception {
+        File root = temporaryFolder.newFolder("entry-count");
+        for (int index = 0; index < 256; index++) {
+            File file = new File(root, String.format("%064x.cache", index));
+            try (FileOutputStream output = new FileOutputStream(file)) {
+                output.write(index);
+            }
+            assertTrue(file.setLastModified(index + 1L));
+        }
+        MorpheCache cache = new MorpheCache(
+                root,
+                100,
+                100_000,
+                new MutableClock(10_000L)
+        );
+
+        cache.put("ns", "newest", new byte[] {1}, 5000L);
+
+        File[] managed = root.listFiles((directory, name) -> name.matches("[0-9a-f]{64}\\.cache"));
+        assertTrue(managed != null);
+        assertEquals(256, managed.length);
+        assertArrayEquals(new byte[] {1}, cache.get("ns", "newest"));
+    }
+
+    @Test
+    public void failedCandidateDeletionRemovesNewProtectedEntry() throws Exception {
+        File root = temporaryFolder.newFolder("deletion-failure");
+        MutableClock clock = new MutableClock(1000L);
+        File[] blockedDeletion = new File[1];
+        MorpheCache cache = new MorpheCache(root, 4, 24, clock, file -> {
+            if (blockedDeletion[0] != null && blockedDeletion[0].equals(file)) return false;
+            return file.delete();
+        });
+        cache.put("ns", "old", new byte[] {1, 1, 1, 1}, 5000L);
+        blockedDeletion[0] = root.listFiles()[0];
+        clock.now++;
+
+        assertThrows(java.io.IOException.class,
+                () -> cache.put("ns", "new", new byte[] {2, 2, 2, 2}, 5000L));
+
+        assertNull(cache.get("ns", "new"));
+        assertArrayEquals(new byte[] {1, 1, 1, 1}, cache.get("ns", "old"));
     }
 
     @Test

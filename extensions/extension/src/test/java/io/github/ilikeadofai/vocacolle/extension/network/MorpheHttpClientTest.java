@@ -7,6 +7,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.ProtocolException;
 import java.security.Principal;
@@ -82,6 +84,19 @@ public class MorpheHttpClientTest {
     }
 
     @Test
+    public void totalBodyDeadlineDisconnectsAnActivelyBlockedRead() throws Exception {
+        FakeConnection connection = new FakeConnection(new URL("https://example.com/slow"));
+        connection.status = 200;
+        connection.bodyInput = new BlockingUntilClosedInputStream(200L);
+        MorpheHttpClient client = new MorpheHttpClient(url -> connection, 1000, 20, 16);
+
+        assertThrows(SocketTimeoutException.class, () -> client.get(connection.getURL()));
+
+        assertTrue(connection.input.closed);
+        assertTrue(connection.disconnected);
+    }
+
+    @Test
     public void httpErrorUsesErrorBodyAndStillReturnsStatus() throws Exception {
         FakeConnection connection = new FakeConnection(new URL("https://example.com/error"));
         connection.status = 404;
@@ -142,6 +157,7 @@ public class MorpheHttpClientTest {
         int status;
         String contentType;
         byte[] body = new byte[0];
+        InputStream bodyInput;
         byte[] errorBody;
         final TrackingInputStream input = new TrackingInputStream();
         final TrackingInputStream errorInput = new TrackingInputStream();
@@ -156,18 +172,30 @@ public class MorpheHttpClientTest {
         FakeConnection(URL url) { super(url); }
         @Override public void setConnectTimeout(int value) { connectTimeout = value; }
         @Override public void setReadTimeout(int value) { readTimeout = value; }
+        @Override public int getReadTimeout() { return readTimeout; }
         @Override public void setRequestMethod(String value) { method = value; }
         @Override public void setRequestProperty(String key, String value) { headers.put(key, value); }
         @Override public void setInstanceFollowRedirects(boolean value) { followRedirects = value; }
         @Override public int getResponseCode() { return status; }
         @Override public String getContentType() { return contentType; }
-        @Override public TrackingInputStream getInputStream() { inputOpenCount++; input.delegate = new ByteArrayInputStream(body); return input; }
+        @Override public TrackingInputStream getInputStream() {
+            inputOpenCount++;
+            input.delegate = bodyInput == null ? new ByteArrayInputStream(body) : bodyInput;
+            return input;
+        }
         @Override public java.io.InputStream getErrorStream() {
             if (errorBody == null) return null;
             errorInput.delegate = new ByteArrayInputStream(errorBody);
             return errorInput;
         }
-        @Override public void disconnect() { disconnected = true; }
+        @Override public void disconnect() {
+            disconnected = true;
+            try {
+                input.close();
+            } catch (IOException ignored) {
+                // Test double cleanup only.
+            }
+        }
         @Override public boolean usingProxy() { return false; }
         @Override public void connect() { }
         @Override public String getCipherSuite() { return "fake"; }
@@ -183,5 +211,46 @@ public class MorpheHttpClientTest {
         @Override public int read() throws IOException { return delegate.read(); }
         @Override public int read(byte[] b, int off, int len) throws IOException { return delegate.read(b, off, len); }
         @Override public void close() throws IOException { closed = true; delegate.close(); }
+    }
+
+    static final class BlockingUntilClosedInputStream extends InputStream {
+        private final long maximumWaitMillis;
+        private boolean closed;
+
+        BlockingUntilClosedInputStream(long maximumWaitMillis) {
+            this.maximumWaitMillis = maximumWaitMillis;
+        }
+
+        @Override
+        public int read() throws IOException {
+            byte[] single = new byte[1];
+            int read = read(single, 0, 1);
+            return read == -1 ? -1 : single[0] & 0xff;
+        }
+
+        @Override
+        public synchronized int read(byte[] buffer, int offset, int length) throws IOException {
+            long deadline = System.nanoTime() + maximumWaitMillis * 1_000_000L;
+            try {
+                while (!closed) {
+                    long remainingNanos = deadline - System.nanoTime();
+                    if (remainingNanos <= 0L) {
+                        throw new IOException("Connection was not cancelled at the body deadline");
+                    }
+                    long waitMillis = Math.max(1L, remainingNanos / 1_000_000L);
+                    wait(waitMillis);
+                }
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw new IOException("Interrupted", interrupted);
+            }
+            throw new IOException("Connection closed");
+        }
+
+        @Override
+        public synchronized void close() {
+            closed = true;
+            notifyAll();
+        }
     }
 }
