@@ -1,3 +1,9 @@
+## [1.1.0-dev.3](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0-dev.2...v1.1.0-dev.3) (2026-07-23)
+
+### 🐛 Bug Fixes
+
+* keep desktop image types out of patch metadata ([9edd493](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/9edd4933fa80ccaa9bff8bd69fb8be434144c778))
+
 ## [1.1.0-dev.2](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0-dev.1...v1.1.0-dev.2) (2026-07-23)
 
 ### 🐛 Bug Fixes
