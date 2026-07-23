@@ -1,9 +1,11 @@
 package io.github.ilikeadofai.vocacolle.extension.settings;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import java.util.Locale;
@@ -40,6 +42,8 @@ public final class MorpheSettingsActivity {
                 Locale.getDefault().getLanguage()
         );
         activity.setTitle(strings.settingsTitle);
+        hideHostActionBar(activity);
+        MorpheSettingsTheme.applySystemBars(activity, MorpheSettingsTheme.resolve(activity));
 
         FrameLayout content = new FrameLayout(activity);
         content.setId(CONTENT_VIEW_ID);
@@ -57,5 +61,21 @@ public final class MorpheSettingsActivity {
                     .commit();
         }
         return true;
+    }
+
+    @SuppressLint("DiscouragedApi")
+    private static void hideHostActionBar(Activity activity) {
+        int actionBarContainerId = activity.getResources().getIdentifier(
+                "action_bar_container",
+                "id",
+                activity.getPackageName()
+        );
+        if (actionBarContainerId == 0) {
+            return;
+        }
+        View actionBarContainer = activity.findViewById(actionBarContainerId);
+        if (actionBarContainer != null) {
+            actionBarContainer.setVisibility(View.GONE);
+        }
     }
 }
