@@ -1,11 +1,11 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.0.0",
+  "version": "1.0.1-dev.1",
   "patches": [
     {
       "name": "Korean hardcoded UI",
       "description": "Translates production Compose and third-party UI strings embedded directly in VocaColle bytecode.",
-      "default": false,
+      "default": true,
       "dependencies": [],
       "compatiblePackages": [
         {
@@ -31,7 +31,7 @@
     {
       "name": "Korean native server UI",
       "description": "Translates whitelisted server-provided labels only at native UI display boundaries.",
-      "default": false,
+      "default": true,
       "dependencies": [],
       "compatiblePackages": [
         {
@@ -57,7 +57,7 @@
     {
       "name": "Korean static UI",
       "description": "Adds reviewed Korean resources for all app and library static UI strings, plurals, and arrays.",
-      "default": false,
+      "default": true,
       "dependencies": [],
       "compatiblePackages": [
         {

@@ -1,3 +1,9 @@
+## [1.0.1-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.0.0...v1.0.1-dev.1) (2026-07-23)
+
+### 🐛 Bug Fixes
+
+* select Korean localization patches by default ([64cc95d](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/64cc95d4724eb66af499e1b0ed63eeb8e9b9d078))
+
 ## 1.0.0 (2026-07-23)
 
 ### 🐛 Bug Fixes
