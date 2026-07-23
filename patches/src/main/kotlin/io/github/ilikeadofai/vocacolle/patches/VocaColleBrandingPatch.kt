@@ -76,15 +76,6 @@ private fun inspectPng(file: File): IconMetadata {
     }
 }
 
-private fun readValidatedPng(file: File): BufferedImage {
-    val metadata = inspectPng(file)
-    val image = requireNotNull(ImageIO.read(file)) { "App icon is not a readable PNG file" }
-    check(image.width == metadata.width && image.height == metadata.height) {
-        "App icon dimensions changed while reading"
-    }
-    return image
-}
-
 internal fun customIconFileOrNull(value: String): File? {
     val normalized = value.trim()
     if (normalized.isEmpty()) return null
@@ -112,91 +103,119 @@ internal object LauncherIconRenderer {
     )
 
     fun render(sourceFile: File, resolveTarget: (String) -> File) {
-        val source = readValidatedPng(sourceFile)
-        val backgroundColor = cornerColor(source)
-
-        densities.forEach { density ->
-            val directory = "res/mipmap-${density.qualifier}-v4"
-            writePng(
-                resize(source, density.legacySize, density.legacySize),
-                resolveTarget("$directory/ic_launcher.png")
-            )
-            writePng(
-                adaptiveForeground(source, density.adaptiveSize),
-                resolveTarget("$directory/ic_launcher_foreground.png")
-            )
-            writePng(
-                solidImage(density.adaptiveSize, backgroundColor),
-                resolveTarget("$directory/ic_launcher_background.png")
-            )
+        val metadata = inspectPng(sourceFile)
+        val source = requireNotNull(ImageIO.read(sourceFile)) {
+            "App icon is not a readable PNG file"
         }
-    }
-
-    private fun adaptiveForeground(source: BufferedImage, size: Int): BufferedImage {
-        val iconSize = size * 2 / 3
-        val output = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
-        val inset = (size - iconSize) / 2
-        output.createGraphics().use { graphics ->
-            configureGraphics(graphics)
-            graphics.drawImage(source, inset, inset, iconSize, iconSize, null)
+        check(source.width == metadata.width && source.height == metadata.height) {
+            "App icon dimensions changed while reading"
         }
-        return output
-    }
 
-    private fun resize(source: BufferedImage, width: Int, height: Int): BufferedImage {
-        val output = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
-        output.createGraphics().use { graphics ->
-            configureGraphics(graphics)
-            graphics.drawImage(source, 0, 0, width, height, null)
-        }
-        return output
-    }
-
-    private fun solidImage(size: Int, color: Color): BufferedImage {
-        val output = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
-        output.createGraphics().use { graphics ->
-            graphics.color = color
-            graphics.fillRect(0, 0, size, size)
-        }
-        return output
-    }
-
-    private fun cornerColor(source: BufferedImage): Color {
-        val pixels = intArrayOf(
+        val cornerPixels = intArrayOf(
             source.getRGB(0, 0),
             source.getRGB(source.width - 1, 0),
             source.getRGB(0, source.height - 1),
             source.getRGB(source.width - 1, source.height - 1)
         )
-        fun composite(channel: (Color) -> Int): Int = pixels
-            .map { Color(it, true) }
-            .map { color ->
-                (channel(color) * color.alpha + 255 * (255 - color.alpha)) / 255
-            }
-            .average()
-            .toInt()
-        return Color(composite(Color::getRed), composite(Color::getGreen), composite(Color::getBlue))
-    }
-
-    private fun configureGraphics(graphics: java.awt.Graphics2D) {
-        graphics.setRenderingHint(
-            RenderingHints.KEY_INTERPOLATION,
-            RenderingHints.VALUE_INTERPOLATION_BICUBIC
+        var red = 0
+        var green = 0
+        var blue = 0
+        for (pixel in cornerPixels) {
+            val color = Color(pixel, true)
+            red += (color.red * color.alpha + 255 * (255 - color.alpha)) / 255
+            green += (color.green * color.alpha + 255 * (255 - color.alpha)) / 255
+            blue += (color.blue * color.alpha + 255 * (255 - color.alpha)) / 255
+        }
+        val backgroundColor = Color(
+            red / cornerPixels.size,
+            green / cornerPixels.size,
+            blue / cornerPixels.size
         )
-        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
-        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-    }
 
-    private fun writePng(image: BufferedImage, file: File) {
-        file.parentFile?.mkdirs()
-        check(ImageIO.write(image, "png", file)) { "Failed to write launcher icon: $file" }
-    }
+        for (density in densities) {
+            val directory = "res/mipmap-${density.qualifier}-v4"
 
-    private inline fun <T : java.awt.Graphics> T.use(block: (T) -> Unit) {
-        try {
-            block(this)
-        } finally {
-            dispose()
+            val legacy = BufferedImage(
+                density.legacySize,
+                density.legacySize,
+                BufferedImage.TYPE_INT_ARGB
+            )
+            val legacyGraphics = legacy.createGraphics()
+            try {
+                legacyGraphics.setRenderingHint(
+                    RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_BICUBIC
+                )
+                legacyGraphics.setRenderingHint(
+                    RenderingHints.KEY_RENDERING,
+                    RenderingHints.VALUE_RENDER_QUALITY
+                )
+                legacyGraphics.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
+                )
+                legacyGraphics.drawImage(
+                    source,
+                    0,
+                    0,
+                    density.legacySize,
+                    density.legacySize,
+                    null
+                )
+            } finally {
+                legacyGraphics.dispose()
+            }
+
+            val foreground = BufferedImage(
+                density.adaptiveSize,
+                density.adaptiveSize,
+                BufferedImage.TYPE_INT_ARGB
+            )
+            val foregroundGraphics = foreground.createGraphics()
+            try {
+                foregroundGraphics.setRenderingHint(
+                    RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_BICUBIC
+                )
+                foregroundGraphics.setRenderingHint(
+                    RenderingHints.KEY_RENDERING,
+                    RenderingHints.VALUE_RENDER_QUALITY
+                )
+                foregroundGraphics.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
+                )
+                val iconSize = density.adaptiveSize * 2 / 3
+                val inset = (density.adaptiveSize - iconSize) / 2
+                foregroundGraphics.drawImage(source, inset, inset, iconSize, iconSize, null)
+            } finally {
+                foregroundGraphics.dispose()
+            }
+
+            val background = BufferedImage(
+                density.adaptiveSize,
+                density.adaptiveSize,
+                BufferedImage.TYPE_INT_ARGB
+            )
+            val backgroundGraphics = background.createGraphics()
+            try {
+                backgroundGraphics.color = backgroundColor
+                backgroundGraphics.fillRect(0, 0, density.adaptiveSize, density.adaptiveSize)
+            } finally {
+                backgroundGraphics.dispose()
+            }
+
+            val outputs = arrayOf(
+                legacy to resolveTarget("$directory/ic_launcher.png"),
+                foreground to resolveTarget("$directory/ic_launcher_foreground.png"),
+                background to resolveTarget("$directory/ic_launcher_background.png")
+            )
+            for ((image, file) in outputs) {
+                file.parentFile?.mkdirs()
+                check(ImageIO.write(image, "png", file)) {
+                    "Failed to write launcher icon: $file"
+                }
+            }
         }
     }
 }

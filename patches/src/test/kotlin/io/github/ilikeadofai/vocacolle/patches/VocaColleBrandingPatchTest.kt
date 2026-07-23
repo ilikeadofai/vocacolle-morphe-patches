@@ -145,6 +145,22 @@ class VocaColleBrandingPatchTest {
         assertTrue(outputRoot.deleteRecursively())
     }
 
+    @Test
+    fun `branding metadata reflection does not resolve desktop image types`() {
+        val classes = listOf(
+            Class.forName("io.github.ilikeadofai.vocacolle.patches.VocaColleBrandingPatchKt"),
+            LauncherIconRenderer::class.java
+        )
+
+        val desktopTypes = classes
+            .flatMap { type -> type.declaredMethods.asList() }
+            .flatMap { method -> method.parameterTypes.asList() + method.returnType }
+            .map { type -> type.name }
+            .filter { name -> name.startsWith("java.awt.") || name.startsWith("javax.imageio.") }
+
+        assertEquals(emptyList(), desktopTypes)
+    }
+
     private fun writePngHeader(file: java.io.File, width: Int, height: Int) {
         DataOutputStream(FileOutputStream(file)).use { output ->
             output.write(byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a))
