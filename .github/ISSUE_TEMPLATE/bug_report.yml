@@ -10,7 +10,7 @@ body:
 
         Before creating a new bug report, please keep the following in mind:
 
-        - **Do not submit a duplicate bug report**: Search [existing bug reports](https://github.com/ilikeadofai/morphe-patches-template/issues?q=label%3Abug) first.
+        - **Do not submit a duplicate bug report**: Search [existing bug reports](https://github.com/ilikeadofai/vocacolle-morphe-patches/issues?q=label%3Abug) first.
         - Include the VocaColle version, enabled patch names, and Morphe version in the report.
   - type: textarea
     attributes:

@@ -4,10 +4,10 @@ patches {
     about {
         name = "VocaColle Translation Patches"
         description = "Localization and metadata translation patches for VocaColle"
-        source = "https://github.com/ilikeadofai/morphe-patches-template"
+        source = "https://github.com/ilikeadofai/vocacolle-morphe-patches"
         author = "ilikeadofai"
         contact = "https://github.com/ilikeadofai"
-        website = "https://github.com/ilikeadofai/morphe-patches-template"
+        website = "https://github.com/ilikeadofai/vocacolle-morphe-patches"
         license = "GPLv3"
     }
 }

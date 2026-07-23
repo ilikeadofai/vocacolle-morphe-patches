@@ -41,11 +41,11 @@ for the complete validation records.
 
 ## Usage
 
-[Add this repository as a Morphe patch source](https://morphe.software/add-source?github=ilikeadofai/morphe-patches-template),
+[Add this repository as a Morphe patch source](https://morphe.software/add-source?github=ilikeadofai/vocacolle-morphe-patches),
 or manually add:
 
 ```text
-https://github.com/ilikeadofai/morphe-patches-template
+https://github.com/ilikeadofai/vocacolle-morphe-patches
 ```
 
 The three Korean localization patches are opt-in and are intended to be enabled
