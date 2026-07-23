@@ -241,7 +241,7 @@ private fun addMorpheSettingsRow() {
             const-wide/16 v12, 0x0
             const/4 v14, 0x0
             const-wide/16 v15, 0x0
-            const/4 v19, 0x0
+            const/16 v19, 0x0
             const/16 v20, 0xfd
             invoke-static/range {v7 .. v20}, $SETTING_ROW->s$SETTING_ROW_DESCRIPTOR
         """.trimIndent()

@@ -41,6 +41,9 @@ public final class MorpheSettingsFragment extends Fragment {
 
     private SettingsStore settingsStore;
     private Switch runtimeFeaturesSwitch;
+    private Switch appOpenAdBlockingSwitch;
+    private Switch playerAdBlockingSwitch;
+    private Switch premiumPromotionHidingSwitch;
     private TextView cacheSummaryView;
     private View clearCacheRow;
 
@@ -148,6 +151,67 @@ public final class MorpheSettingsFragment extends Fragment {
         );
         content.addView(diagnostics.root);
 
+        addSectionTitle(content, strings.adsCategory, palette, false);
+
+        appOpenAdBlockingSwitch = new Switch(activity);
+        appOpenAdBlockingSwitch.setChecked(settingsStore.isAppOpenAdBlockingEnabled());
+        tintSwitch(appOpenAdBlockingSwitch, palette);
+        RowViews appOpenAdRow = createSettingRow(
+                activity,
+                strings.appOpenAdBlockingTitle,
+                strings.appOpenAdBlockingSummary,
+                palette,
+                true,
+                appOpenAdBlockingSwitch
+        );
+        appOpenAdRow.root.setOnClickListener(ignored ->
+                appOpenAdBlockingSwitch.setChecked(!appOpenAdBlockingSwitch.isChecked())
+        );
+        appOpenAdBlockingSwitch.setOnCheckedChangeListener((ignored, checked) ->
+                settingsStore.setAppOpenAdBlockingEnabled(checked)
+        );
+        content.addView(appOpenAdRow.root);
+        content.addView(createDivider(activity, palette, dp(activity, 20)));
+
+        playerAdBlockingSwitch = new Switch(activity);
+        playerAdBlockingSwitch.setChecked(settingsStore.isPlayerAdBlockingEnabled());
+        tintSwitch(playerAdBlockingSwitch, palette);
+        RowViews playerAdRow = createSettingRow(
+                activity,
+                strings.playerAdBlockingTitle,
+                strings.playerAdBlockingSummary,
+                palette,
+                true,
+                playerAdBlockingSwitch
+        );
+        playerAdRow.root.setOnClickListener(ignored ->
+                playerAdBlockingSwitch.setChecked(!playerAdBlockingSwitch.isChecked())
+        );
+        playerAdBlockingSwitch.setOnCheckedChangeListener((ignored, checked) ->
+                settingsStore.setPlayerAdBlockingEnabled(checked)
+        );
+        content.addView(playerAdRow.root);
+        content.addView(createDivider(activity, palette, dp(activity, 20)));
+
+        premiumPromotionHidingSwitch = new Switch(activity);
+        premiumPromotionHidingSwitch.setChecked(settingsStore.isPremiumPromotionHidingEnabled());
+        tintSwitch(premiumPromotionHidingSwitch, palette);
+        RowViews premiumPromotionRow = createSettingRow(
+                activity,
+                strings.premiumPromotionHidingTitle,
+                strings.premiumPromotionHidingSummary,
+                palette,
+                true,
+                premiumPromotionHidingSwitch
+        );
+        premiumPromotionRow.root.setOnClickListener(ignored ->
+                premiumPromotionHidingSwitch.setChecked(!premiumPromotionHidingSwitch.isChecked())
+        );
+        premiumPromotionHidingSwitch.setOnCheckedChangeListener((ignored, checked) ->
+                settingsStore.setPremiumPromotionHidingEnabled(checked)
+        );
+        content.addView(premiumPromotionRow.root);
+
         addSectionTitle(content, strings.storageCategory, palette, false);
 
         final MorpheCache cache = openCache(activity);
@@ -237,11 +301,23 @@ public final class MorpheSettingsFragment extends Fragment {
         if (runtimeFeaturesSwitch != null && settingsStore != null) {
             runtimeFeaturesSwitch.setChecked(settingsStore.areRuntimeFeaturesEnabled());
         }
+        if (appOpenAdBlockingSwitch != null && settingsStore != null) {
+            appOpenAdBlockingSwitch.setChecked(settingsStore.isAppOpenAdBlockingEnabled());
+        }
+        if (playerAdBlockingSwitch != null && settingsStore != null) {
+            playerAdBlockingSwitch.setChecked(settingsStore.isPlayerAdBlockingEnabled());
+        }
+        if (premiumPromotionHidingSwitch != null && settingsStore != null) {
+            premiumPromotionHidingSwitch.setChecked(settingsStore.isPremiumPromotionHidingEnabled());
+        }
     }
 
     @Override
     public void onDestroyView() {
         runtimeFeaturesSwitch = null;
+        appOpenAdBlockingSwitch = null;
+        playerAdBlockingSwitch = null;
+        premiumPromotionHidingSwitch = null;
         cacheSummaryView = null;
         clearCacheRow = null;
         super.onDestroyView();

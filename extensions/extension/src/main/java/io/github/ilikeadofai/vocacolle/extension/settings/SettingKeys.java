@@ -5,6 +5,12 @@ public final class SettingKeys {
     public static final String RUNTIME_FEATURES_ENABLED =
             "morphe_runtime_features_enabled";
     public static final String DISPLAY_LANGUAGE = "morphe_display_language";
+    public static final String APP_OPEN_AD_BLOCKING_ENABLED =
+            "morphe_app_open_ad_blocking_enabled";
+    public static final String PLAYER_AD_BLOCKING_ENABLED =
+            "morphe_player_ad_blocking_enabled";
+    public static final String PREMIUM_PROMOTION_HIDING_ENABLED =
+            "morphe_premium_promotion_hiding_enabled";
 
     private SettingKeys() {
     }

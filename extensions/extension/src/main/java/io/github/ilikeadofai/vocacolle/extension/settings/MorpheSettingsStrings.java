@@ -11,6 +11,13 @@ public final class MorpheSettingsStrings {
             new String[]{"システム設定", "日本語", "英語", "韓国語"},
             "Morphe ランタイム機能",
             "今後追加される実行時機能の共通スイッチです。ビルド時に適用された翻訳パッチには影響しません。",
+            "広告",
+            "起動時広告をブロック",
+            "コールドスタート時とアプリへの復帰時に表示される広告をブロックします。",
+            "再生中の音声広告をブロック",
+            "曲間に挿入されるネットワーク広告とローカル音声広告をブロックします。",
+            "自動Premium案内を非表示",
+            "制限機能の利用時に自動表示されるPremium案内を非表示にします。登録画面は引き続き利用できます。",
             "ストレージ",
             "キャッシュデータ",
             "使用量: %s / 上限: %s",
@@ -29,6 +36,13 @@ public final class MorpheSettingsStrings {
             "Morphe Runtime Features",
             "Common switch for runtime features added in the future. "
                     + "It does not affect translation patches applied at build time.",
+            "Ads",
+            "Block app-open ads",
+            "Blocks ads shown at cold start and when returning to the app.",
+            "Block in-player audio ads",
+            "Blocks network and local audio ads inserted between tracks.",
+            "Hide automatic Premium promotions",
+            "Hides Premium prompts shown automatically for restricted features. Registration remains available.",
             "Storage",
             "Cached data",
             "Used: %s / limit: %s",
@@ -47,6 +61,13 @@ public final class MorpheSettingsStrings {
             "Morphe 런타임 기능",
             "향후 추가되는 런타임 기능을 위한 공통 스위치입니다. "
                     + "빌드 시 적용된 번역 패치에는 영향을 주지 않습니다.",
+            "광고",
+            "앱 시작·복귀 광고 차단",
+            "앱을 처음 실행하거나 다시 돌아올 때 표시되는 광고를 차단합니다.",
+            "재생 중 음성 광고 차단",
+            "곡 사이에 삽입되는 네트워크 광고와 로컬 음성 광고를 차단합니다.",
+            "자동 Premium 홍보 숨기기",
+            "제한 기능 사용 시 자동으로 표시되는 Premium 안내를 숨깁니다. 가입 화면은 계속 이용할 수 있습니다.",
             "저장 공간",
             "캐시 데이터",
             "사용량: %s / 한도: %s",
@@ -65,6 +86,13 @@ public final class MorpheSettingsStrings {
     public final String[] displayLanguageEntryValues = {"system", "ja", "en", "ko"};
     public final String runtimeFeaturesTitle;
     public final String runtimeFeaturesSummary;
+    public final String adsCategory;
+    public final String appOpenAdBlockingTitle;
+    public final String appOpenAdBlockingSummary;
+    public final String playerAdBlockingTitle;
+    public final String playerAdBlockingSummary;
+    public final String premiumPromotionHidingTitle;
+    public final String premiumPromotionHidingSummary;
     public final String storageCategory;
     public final String cacheTitle;
     public final String cacheSummaryFormat;
@@ -82,6 +110,13 @@ public final class MorpheSettingsStrings {
             String[] displayLanguageEntries,
             String runtimeFeaturesTitle,
             String runtimeFeaturesSummary,
+            String adsCategory,
+            String appOpenAdBlockingTitle,
+            String appOpenAdBlockingSummary,
+            String playerAdBlockingTitle,
+            String playerAdBlockingSummary,
+            String premiumPromotionHidingTitle,
+            String premiumPromotionHidingSummary,
             String storageCategory,
             String cacheTitle,
             String cacheSummaryFormat,
@@ -98,6 +133,13 @@ public final class MorpheSettingsStrings {
         this.displayLanguageEntries = displayLanguageEntries;
         this.runtimeFeaturesTitle = runtimeFeaturesTitle;
         this.runtimeFeaturesSummary = runtimeFeaturesSummary;
+        this.adsCategory = adsCategory;
+        this.appOpenAdBlockingTitle = appOpenAdBlockingTitle;
+        this.appOpenAdBlockingSummary = appOpenAdBlockingSummary;
+        this.playerAdBlockingTitle = playerAdBlockingTitle;
+        this.playerAdBlockingSummary = playerAdBlockingSummary;
+        this.premiumPromotionHidingTitle = premiumPromotionHidingTitle;
+        this.premiumPromotionHidingSummary = premiumPromotionHidingSummary;
         this.storageCategory = storageCategory;
         this.cacheTitle = cacheTitle;
         this.cacheSummaryFormat = cacheSummaryFormat;

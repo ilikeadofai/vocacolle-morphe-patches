@@ -256,7 +256,10 @@ Morphe 상세 화면은 다음을 재사용한다.
 
 ## 4.3 P0-C: 광고 제거 기능
 
-**상태: READY, 세 개 toggle로 분리**
+**상태: IMPLEMENTED LOCALLY, target APK 검증 완료·실기기 acceptance 대기**
+
+세 기능은 각각 opt-in toggle이며 기본값은 OFF다. Morphe runtime 기능이 OFF이면
+모든 hook은 원본 flow를 보존한다.
 
 ### C1. app-open 광고
 
@@ -266,20 +269,30 @@ Morphe 상세 화면은 다음을 재사용한다.
 
 ### C2. 재생 중 광고·음성 광고
 
-- player command의 `isAdReserved`가 생성되는 지점을 hook한다.
-- 광고 media item이 queue에 들어오기 전에 차단한다.
+- `isAdReserved=false`만으로는 local/fallback 광고가 선택될 수 있으므로
+  `AudioAdContentProvider.e(...)`의 중앙 source decision을 hook한다.
+- 차단 시 source 생성 전에 원본 no-ad sentinel을 반환한다.
 - `PlayerAdCenterContentView`를 숨기는 것만으로 끝내지 않는다. 소리는 남고 UI만 없어질 수 있기 때문이다.
 
 ### C3. premium 홍보 UI
 
-- 광고 제거와 직접 관련된 `PremiumMeritLeadDialog`·registration notice를 숨긴다.
+- 고유 analytics ID를 가진 `PremiumMeritLeadDialog` 자동 show callsite 7개만 숨긴다.
+- `PremiumRegistrationActivity`, registration notice, 직접 가입 launcher는 보존한다.
 - 고음질, mylist 제한 등 실제 기능 오류는 숨기지 않는다.
 - 이 toggle은 premium entitlement를 `true`로 위조하지 않는다.
 
-### planned files
+### 구현 파일
 
 - `patches/src/main/kotlin/io/github/ilikeadofai/vocacolle/patches/VocaColleAdControlPatch.kt`
 - `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/ads/AdControl.java`
+
+### 현재 검증 상태
+
+- VocaColle `7.40.0 (177)` FULL DEX rebuild 통과
+- app-open·audio-ad·Premium 7개 callsite의 injected `AdControl` 호출 확인
+- `PremiumRegistrationActivity` launcher의 `AdControl` 참조 0개 확인
+- settings patch와 ad-control patch 동시 적용 및 두 Application 초기화 hook 확인
+- extension unit test, Android lint, `check buildAndroid` 통과
 
 ### 완료 기준
 

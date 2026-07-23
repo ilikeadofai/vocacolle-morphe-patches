@@ -13,15 +13,9 @@ import java.io.File
 import java.net.URLClassLoader
 import java.util.jar.Manifest
 
-fun main() {
-    val patchFiles = setOf(
-        File("build/libs/").listFiles { file ->
-            val fileName = file.name
-            !fileName.contains("javadoc") &&
-                    !fileName.contains("sources") &&
-                    fileName.endsWith(".mpp")
-        }!!.first()
-    )
+fun main(args: Array<String>) {
+    require(args.size == 1) { "Expected the current MPP path as the only argument" }
+    val patchFiles = setOf(requireGeneratedPatchBundle(File(args.single())))
     val loadedPatches = loadPatchesFromJar(patchFiles)
     val patchClassLoader = URLClassLoader(patchFiles.map { it.toURI().toURL() }.toTypedArray())
     val manifest = patchClassLoader.getResources("META-INF/MANIFEST.MF")
@@ -34,6 +28,13 @@ fun main() {
                 generatePatchList(it, loadedPatches)
             }
     }
+}
+
+internal fun requireGeneratedPatchBundle(file: File): File {
+    check(file.isFile && file.extension.equals("mpp", ignoreCase = true)) {
+        "Current generated MPP is missing or invalid: ${file.absolutePath}"
+    }
+    return file
 }
 
 @Suppress("DEPRECATION")

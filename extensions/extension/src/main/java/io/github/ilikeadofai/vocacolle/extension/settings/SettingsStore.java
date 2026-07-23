@@ -8,6 +8,9 @@ import android.preference.PreferenceManager;
 @SuppressWarnings("deprecation")
 public final class SettingsStore {
     private static final boolean DEFAULT_RUNTIME_FEATURES_ENABLED = true;
+    private static final boolean DEFAULT_APP_OPEN_AD_BLOCKING_ENABLED = false;
+    private static final boolean DEFAULT_PLAYER_AD_BLOCKING_ENABLED = false;
+    private static final boolean DEFAULT_PREMIUM_PROMOTION_HIDING_ENABLED = false;
 
     private final Backend backend;
 
@@ -38,6 +41,39 @@ public final class SettingsStore {
 
     public void setRuntimeFeaturesEnabled(boolean enabled) {
         backend.putBoolean(SettingKeys.RUNTIME_FEATURES_ENABLED, enabled);
+    }
+
+    public boolean isAppOpenAdBlockingEnabled() {
+        return backend.getBoolean(
+                SettingKeys.APP_OPEN_AD_BLOCKING_ENABLED,
+                DEFAULT_APP_OPEN_AD_BLOCKING_ENABLED
+        );
+    }
+
+    public void setAppOpenAdBlockingEnabled(boolean enabled) {
+        backend.putBoolean(SettingKeys.APP_OPEN_AD_BLOCKING_ENABLED, enabled);
+    }
+
+    public boolean isPlayerAdBlockingEnabled() {
+        return backend.getBoolean(
+                SettingKeys.PLAYER_AD_BLOCKING_ENABLED,
+                DEFAULT_PLAYER_AD_BLOCKING_ENABLED
+        );
+    }
+
+    public void setPlayerAdBlockingEnabled(boolean enabled) {
+        backend.putBoolean(SettingKeys.PLAYER_AD_BLOCKING_ENABLED, enabled);
+    }
+
+    public boolean isPremiumPromotionHidingEnabled() {
+        return backend.getBoolean(
+                SettingKeys.PREMIUM_PROMOTION_HIDING_ENABLED,
+                DEFAULT_PREMIUM_PROMOTION_HIDING_ENABLED
+        );
+    }
+
+    public void setPremiumPromotionHidingEnabled(boolean enabled) {
+        backend.putBoolean(SettingKeys.PREMIUM_PROMOTION_HIDING_ENABLED, enabled);
     }
 
     public DisplayLanguage getDisplayLanguage() {
