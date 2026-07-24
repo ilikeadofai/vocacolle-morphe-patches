@@ -9,6 +9,8 @@ public final class SettingKeys {
             "morphe_app_open_ad_blocking_enabled";
     public static final String PLAYER_AD_BLOCKING_ENABLED =
             "morphe_player_ad_blocking_enabled";
+    public static final String DISPLAY_AD_BLOCKING_ENABLED =
+            "morphe_display_ad_blocking_enabled";
     public static final String PREMIUM_PROMOTION_HIDING_ENABLED =
             "morphe_premium_promotion_hiding_enabled";
 

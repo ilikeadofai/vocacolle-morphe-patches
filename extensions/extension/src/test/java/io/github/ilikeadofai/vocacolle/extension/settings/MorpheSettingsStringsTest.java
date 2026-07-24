@@ -65,7 +65,8 @@ public class MorpheSettingsStringsTest {
                 strings.appOpenAdBlockingSummary
         );
         assertEquals("Block in-player audio ads", strings.playerAdBlockingTitle);
-        assertEquals("Hide automatic Premium promotions", strings.premiumPromotionHidingTitle);
+        assertEquals("Block banner and in-feed ads", strings.displayAdBlockingTitle);
+        assertEquals("Hide Premium pop-ups", strings.premiumPromotionHidingTitle);
         assertEquals("Cached data", strings.cacheTitle);
         assertEquals("Clear cache", strings.clearCacheTitle);
         assertEquals("Cache cleared", strings.cacheClearedMessage);

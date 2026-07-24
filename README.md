@@ -5,7 +5,7 @@ VocaColle (`jp.nicovideo.nicobox`). The current development release adds the
 Morphe settings foundation, optional launcher branding, visible patch-version
 information, selectable Japanese/English/Korean UI, and reusable bounded
 network/cache foundations. The v1.2 development work adds an optional ad-control
-patch with three independent runtime toggles that all default to OFF.
+patch with four independent runtime toggles that all default to OFF.
 
 [![Latest release](https://img.shields.io/github/v/release/ilikeadofai/vocacolle-morphe-patches?sort=semver)](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/latest)
 [![Release workflow](https://github.com/ilikeadofai/vocacolle-morphe-patches/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/ilikeadofai/vocacolle-morphe-patches/actions/workflows/release.yml)
@@ -32,7 +32,17 @@ patch with three independent runtime toggles that all default to OFF.
    the original Japanese name and icon unless custom values are supplied. The
    compatibility probe stays optional and does not change app behavior. To use
    the v1.2 advertising controls, also select `VocaColle ad control`, then enable
-   only the desired toggles inside Morphe settings; all three remain OFF by default.
+   only the desired toggles inside Morphe settings; all four remain OFF by default.
+
+### Ad control scope
+
+- app-open ads,
+- Home/search/Library/playlist display ads through the central display-ad loader,
+- network and bundled local voice ads inserted between tracks,
+- the automatic Home Premium bottom sheet and seven restricted-feature Premium pop-ups.
+
+Premium registration, payment/subscription management, and non-modal feature
+affordances remain available.
 
 ## Current patches
 
@@ -110,8 +120,8 @@ Adds a `Morphe` item to the native settings toolbar overflow and opens a
 localized framework preference screen hosted by VocaColle's existing settings
 theme. It includes a persistent runtime-feature switch, display-language
 selection, diagnostics, extension-cache usage, a cache-clear action, and v1.2
-controls for app-open ads, in-player audio ads, and automatic Premium lead
-dialogs. The advertising controls require the optional `VocaColle ad control`
+controls for app-open ads, banner/in-feed ads, in-player audio ads, and automatic
+Premium lead dialogs. The advertising controls require the optional `VocaColle ad control`
 patch and default to OFF. Direct Premium registration and entitlement checks are
 not modified.
 VocaColle's app-information screen also displays the

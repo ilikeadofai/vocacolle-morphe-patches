@@ -258,7 +258,7 @@ Morphe 상세 화면은 다음을 재사용한다.
 
 **상태: IMPLEMENTED LOCALLY, target APK 검증 완료·실기기 acceptance 대기**
 
-세 기능은 각각 opt-in toggle이며 기본값은 OFF다. Morphe runtime 기능이 OFF이면
+네 기능은 각각 opt-in toggle이며 기본값은 OFF다. Morphe runtime 기능이 OFF이면
 모든 hook은 원본 flow를 보존한다.
 
 ### C1. app-open 광고
@@ -272,13 +272,26 @@ Morphe 상세 화면은 다음을 재사용한다.
 - `isAdReserved=false`만으로는 local/fallback 광고가 선택될 수 있으므로
   `AudioAdContentProvider.e(...)`의 중앙 source decision을 hook한다.
 - 차단 시 source 생성 전에 원본 no-ad sentinel을 반환한다.
+- 실기기에서 `b_160`~`i_160` 내장 안내·Premium 홍보 음성이 남는 문제가 확인되어,
+  Application 초기화 때 저장한 static settings cache 대신 provider가 확보한 application `Context`로
+  toggle을 다시 읽도록 guard를 옮겼다. target APK 검증은 통과했으며 실기기 재확인이 필요하다.
 - `PlayerAdCenterContentView`를 숨기는 것만으로 끝내지 않는다. 소리는 남고 UI만 없어질 수 있기 때문이다.
 
-### C3. premium 홍보 UI
+### C3. 배너·인피드 광고
 
-- 고유 analytics ID를 가진 `PremiumMeritLeadDialog` 자동 show callsite 7개만 숨긴다.
+- `DisplayAdViewController.loadAd()` (`LBj/b.s()`) 중앙 loader를 hook한다.
+- 차단 시 원본의 기존 광고 destroy를 거친 뒤 `NONE` 상태를 publish해 네트워크 요청과
+  빈 placeholder를 함께 막는다.
+- VocaColle 7.40.0의 `HOME_IN_FEED`, `SEARCH_RESULT_IN_LIST`,
+  `LIBRARY_TOP_FOOTER`, `PLAYLIST_DETAIL_IN_LIST` 네 위치를 공통 hook 하나로 다룬다.
+
+### C4. Premium 팝업
+
+- 홈 진입 시 서버 기반 `PremiumMeritLeadInfoBottomSheetDialog`와 고유 analytics ID를
+  가진 제한 기능 `PremiumMeritLeadDialog` callsite 7개만 숨긴다.
+- 상시 카드·버튼 등 non-modal feature affordance는 보존한다.
 - `PremiumRegistrationActivity`, registration notice, 직접 가입 launcher는 보존한다.
-- 고음질, mylist 제한 등 실제 기능 오류는 숨기지 않는다.
+- 고음질, mylist 제한 등 Premium 전용 기능 자체는 해금하지 않는다.
 - 이 toggle은 premium entitlement를 `true`로 위조하지 않는다.
 
 ### 구현 파일
@@ -289,7 +302,11 @@ Morphe 상세 화면은 다음을 재사용한다.
 ### 현재 검증 상태
 
 - VocaColle `7.40.0 (177)` FULL DEX rebuild 통과
-- app-open·audio-ad·Premium 7개 callsite의 injected `AdControl` 호출 확인
+- app-open·display-ad·audio-ad·Premium 7개 callsite의 injected `AdControl` 호출 확인
+- display-ad guard가 중앙 loader의 application `Context` 확보 직후 실행되고, ON이면
+  `NONE` 상태를 publish한 뒤 AdMob/OX 요청 전에 반환하는 opcode·register shape 확인
+- audio-ad guard가 coroutine state dispatch 뒤 application `Context` 확보 직후 실행되고,
+  ON이면 local/network source 생성 전에 no-ad sentinel을 반환하는 opcode·register shape 확인
 - `PremiumRegistrationActivity` launcher의 `AdControl` 참조 0개 확인
 - settings patch와 ad-control patch 동시 적용 및 두 Application 초기화 hook 확인
 - extension unit test, Android lint, `check buildAndroid` 통과

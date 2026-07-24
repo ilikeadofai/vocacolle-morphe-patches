@@ -10,6 +10,7 @@ public final class SettingsStore {
     private static final boolean DEFAULT_RUNTIME_FEATURES_ENABLED = true;
     private static final boolean DEFAULT_APP_OPEN_AD_BLOCKING_ENABLED = false;
     private static final boolean DEFAULT_PLAYER_AD_BLOCKING_ENABLED = false;
+    private static final boolean DEFAULT_DISPLAY_AD_BLOCKING_ENABLED = false;
     private static final boolean DEFAULT_PREMIUM_PROMOTION_HIDING_ENABLED = false;
 
     private final Backend backend;
@@ -63,6 +64,17 @@ public final class SettingsStore {
 
     public void setPlayerAdBlockingEnabled(boolean enabled) {
         backend.putBoolean(SettingKeys.PLAYER_AD_BLOCKING_ENABLED, enabled);
+    }
+
+    public boolean isDisplayAdBlockingEnabled() {
+        return backend.getBoolean(
+                SettingKeys.DISPLAY_AD_BLOCKING_ENABLED,
+                DEFAULT_DISPLAY_AD_BLOCKING_ENABLED
+        );
+    }
+
+    public void setDisplayAdBlockingEnabled(boolean enabled) {
+        backend.putBoolean(SettingKeys.DISPLAY_AD_BLOCKING_ENABLED, enabled);
     }
 
     public boolean isPremiumPromotionHidingEnabled() {

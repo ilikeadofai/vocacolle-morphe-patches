@@ -31,7 +31,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-    listOf("vocacolle.apk", "vocacolle.matrix.output").forEach { propertyName ->
+    listOf("vocacolle.apk", "vocacolle.matrix.output", "vocacolle.mpp").forEach { propertyName ->
         System.getProperty(propertyName)?.let { propertyValue ->
             systemProperty(propertyName, propertyValue)
         }

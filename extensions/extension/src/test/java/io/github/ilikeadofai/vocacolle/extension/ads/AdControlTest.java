@@ -5,12 +5,20 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import android.content.Context;
 import io.github.ilikeadofai.vocacolle.extension.settings.SettingsStore;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Test;
 
 public class AdControlTest {
+    @Test
+    public void initializationHidesAdControlsWhenSettingsFail() {
+        AdControl.initialize(null);
+
+        assertFalse(AdControl.areHooksInstalled());
+    }
+
     @Test
     public void appOpenOverridePreservesOriginalUnlessRuntimeAndBlockingAreEnabled() {
         InMemoryBackend backend = new InMemoryBackend();
@@ -78,6 +86,24 @@ public class AdControlTest {
     @Test
     public void coroutineResumeWithNullContextPreservesAppOpenFlow() {
         assertNull(AdControl.appOpenAdOverride(null));
+    }
+
+    @Test
+    public void playerAdContextFailuresPreserveOriginalFlow() {
+        assertFalse(AdControl.shouldBlockPlayerAds((Context) null));
+    }
+
+    @Test
+    public void displayAdBlockingRequiresRuntimeAndFeatureToggles() {
+        InMemoryBackend backend = new InMemoryBackend();
+        SettingsStore store = new SettingsStore(backend);
+
+        assertFalse(AdControl.shouldBlockDisplayAds(store));
+        store.setDisplayAdBlockingEnabled(true);
+        assertTrue(AdControl.shouldBlockDisplayAds(store));
+        store.setRuntimeFeaturesEnabled(false);
+        assertFalse(AdControl.shouldBlockDisplayAds(store));
+        assertFalse(AdControl.shouldBlockDisplayAds((Context) null));
     }
 
     private static final class InMemoryBackend implements SettingsStore.Backend {

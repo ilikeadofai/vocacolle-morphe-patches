@@ -14,6 +14,7 @@ class VocaColleAdControlPatchTest {
 
         assertEquals("VocaColle ad control", patch.name)
         assertFalse(patch.default)
+        assertTrue(patch.dependencies.contains(vocacolleMorpheSettingsPatch))
 
         val compatibility = assertNotNull(patch.compatibility).single()
         assertEquals("jp.nicovideo.nicobox", compatibility.packageName)
@@ -47,6 +48,34 @@ class VocaColleAdControlPatchTest {
         assertEquals("Ljava/lang/Object;", audioAdContentFingerprint.returnType)
         assertEquals(listOf("Z", "Z", "Lsl/e;"), audioAdContentFingerprint.parameters)
         assertNotNull(audioAdContentFingerprint.custom)
+    }
+
+    @Test
+    fun `fingerprints the central banner and in feed ad loader`() {
+        assertEquals("LBj/b;", displayAdLoadFingerprint.definingClass)
+        assertEquals("s", displayAdLoadFingerprint.name)
+        assertEquals("V", displayAdLoadFingerprint.returnType)
+        assertEquals(emptyList(), displayAdLoadFingerprint.parameters)
+        assertEquals(listOf("loadAd("), displayAdLoadFingerprint.strings)
+        assertNotNull(displayAdLoadFingerprint.custom)
+    }
+
+    @Test
+    fun `fingerprints the automatic home premium promotion`() {
+        assertEquals(
+            "Ljp/nicovideo/nicobox/ui/home/HomeFragment;",
+            homePremiumPromotionFingerprint.definingClass
+        )
+        assertEquals("N3", homePremiumPromotionFingerprint.name)
+        assertEquals("Lnl/L;", homePremiumPromotionFingerprint.returnType)
+        assertEquals(
+            listOf(
+                "Ljp/nicovideo/nicobox/ui/home/HomeFragment;",
+                "LFf/a;"
+            ),
+            homePremiumPromotionFingerprint.parameters
+        )
+        assertNotNull(homePremiumPromotionFingerprint.custom)
     }
 
     @Test

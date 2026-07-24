@@ -24,6 +24,7 @@ import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+import io.github.ilikeadofai.vocacolle.extension.ads.AdControl;
 import io.github.ilikeadofai.vocacolle.extension.cache.MorpheCache;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -42,6 +43,7 @@ public final class MorpheSettingsFragment extends Fragment {
     private SettingsStore settingsStore;
     private Switch runtimeFeaturesSwitch;
     private Switch appOpenAdBlockingSwitch;
+    private Switch displayAdBlockingSwitch;
     private Switch playerAdBlockingSwitch;
     private Switch premiumPromotionHidingSwitch;
     private TextView cacheSummaryView;
@@ -151,6 +153,7 @@ public final class MorpheSettingsFragment extends Fragment {
         );
         content.addView(diagnostics.root);
 
+        if (AdControl.areHooksInstalled()) {
         addSectionTitle(content, strings.adsCategory, palette, false);
 
         appOpenAdBlockingSwitch = new Switch(activity);
@@ -171,6 +174,26 @@ public final class MorpheSettingsFragment extends Fragment {
                 settingsStore.setAppOpenAdBlockingEnabled(checked)
         );
         content.addView(appOpenAdRow.root);
+        content.addView(createDivider(activity, palette, dp(activity, 20)));
+
+        displayAdBlockingSwitch = new Switch(activity);
+        displayAdBlockingSwitch.setChecked(settingsStore.isDisplayAdBlockingEnabled());
+        tintSwitch(displayAdBlockingSwitch, palette);
+        RowViews displayAdRow = createSettingRow(
+                activity,
+                strings.displayAdBlockingTitle,
+                strings.displayAdBlockingSummary,
+                palette,
+                true,
+                displayAdBlockingSwitch
+        );
+        displayAdRow.root.setOnClickListener(ignored ->
+                displayAdBlockingSwitch.setChecked(!displayAdBlockingSwitch.isChecked())
+        );
+        displayAdBlockingSwitch.setOnCheckedChangeListener((ignored, checked) ->
+                settingsStore.setDisplayAdBlockingEnabled(checked)
+        );
+        content.addView(displayAdRow.root);
         content.addView(createDivider(activity, palette, dp(activity, 20)));
 
         playerAdBlockingSwitch = new Switch(activity);
@@ -211,6 +234,7 @@ public final class MorpheSettingsFragment extends Fragment {
                 settingsStore.setPremiumPromotionHidingEnabled(checked)
         );
         content.addView(premiumPromotionRow.root);
+        }
 
         addSectionTitle(content, strings.storageCategory, palette, false);
 
@@ -304,6 +328,9 @@ public final class MorpheSettingsFragment extends Fragment {
         if (appOpenAdBlockingSwitch != null && settingsStore != null) {
             appOpenAdBlockingSwitch.setChecked(settingsStore.isAppOpenAdBlockingEnabled());
         }
+        if (displayAdBlockingSwitch != null && settingsStore != null) {
+            displayAdBlockingSwitch.setChecked(settingsStore.isDisplayAdBlockingEnabled());
+        }
         if (playerAdBlockingSwitch != null && settingsStore != null) {
             playerAdBlockingSwitch.setChecked(settingsStore.isPlayerAdBlockingEnabled());
         }
@@ -316,6 +343,7 @@ public final class MorpheSettingsFragment extends Fragment {
     public void onDestroyView() {
         runtimeFeaturesSwitch = null;
         appOpenAdBlockingSwitch = null;
+        displayAdBlockingSwitch = null;
         playerAdBlockingSwitch = null;
         premiumPromotionHidingSwitch = null;
         cacheSummaryView = null;

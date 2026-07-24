@@ -14,10 +14,12 @@ public final class MorpheSettingsStrings {
             "広告",
             "起動時広告をブロック",
             "コールドスタート時とアプリへの復帰時に表示される広告をブロックします。",
+            "バナー・インフィード広告をブロック",
+            "ホーム、検索結果、ライブラリ、プレイリストに表示される広告をブロックします。",
             "再生中の音声広告をブロック",
             "曲間に挿入されるネットワーク広告とローカル音声広告をブロックします。",
-            "自動Premium案内を非表示",
-            "制限機能の利用時に自動表示されるPremium案内を非表示にします。登録画面は引き続き利用できます。",
+            "Premiumポップアップを非表示",
+            "ホーム起動時または制限機能の利用時に表示されるPremium案内を非表示にします。登録画面は引き続き利用できます。",
             "ストレージ",
             "キャッシュデータ",
             "使用量: %s / 上限: %s",
@@ -39,10 +41,12 @@ public final class MorpheSettingsStrings {
             "Ads",
             "Block app-open ads",
             "Blocks ads shown at cold start and when returning to the app.",
+            "Block banner and in-feed ads",
+            "Blocks ads shown in Home, search results, Library, and playlists.",
             "Block in-player audio ads",
             "Blocks network and local audio ads inserted between tracks.",
-            "Hide automatic Premium promotions",
-            "Hides Premium prompts shown automatically for restricted features. Registration remains available.",
+            "Hide Premium pop-ups",
+            "Hides Premium dialogs shown on Home startup or after attempting restricted features. Registration remains available.",
             "Storage",
             "Cached data",
             "Used: %s / limit: %s",
@@ -64,10 +68,12 @@ public final class MorpheSettingsStrings {
             "광고",
             "앱 시작·복귀 광고 차단",
             "앱을 처음 실행하거나 다시 돌아올 때 표시되는 광고를 차단합니다.",
+            "배너·피드 광고 차단",
+            "홈, 검색 결과, 라이브러리, 재생목록에 표시되는 광고를 차단합니다.",
             "재생 중 음성 광고 차단",
             "곡 사이에 삽입되는 네트워크 광고와 로컬 음성 광고를 차단합니다.",
-            "자동 Premium 홍보 숨기기",
-            "제한 기능 사용 시 자동으로 표시되는 Premium 안내를 숨깁니다. 가입 화면은 계속 이용할 수 있습니다.",
+            "Premium 팝업 숨기기",
+            "홈 진입 또는 제한 기능 사용 시 표시되는 Premium 안내 팝업을 숨깁니다. 가입 화면은 계속 이용할 수 있습니다.",
             "저장 공간",
             "캐시 데이터",
             "사용량: %s / 한도: %s",
@@ -89,6 +95,8 @@ public final class MorpheSettingsStrings {
     public final String adsCategory;
     public final String appOpenAdBlockingTitle;
     public final String appOpenAdBlockingSummary;
+    public final String displayAdBlockingTitle;
+    public final String displayAdBlockingSummary;
     public final String playerAdBlockingTitle;
     public final String playerAdBlockingSummary;
     public final String premiumPromotionHidingTitle;
@@ -113,6 +121,8 @@ public final class MorpheSettingsStrings {
             String adsCategory,
             String appOpenAdBlockingTitle,
             String appOpenAdBlockingSummary,
+            String displayAdBlockingTitle,
+            String displayAdBlockingSummary,
             String playerAdBlockingTitle,
             String playerAdBlockingSummary,
             String premiumPromotionHidingTitle,
@@ -136,6 +146,8 @@ public final class MorpheSettingsStrings {
         this.adsCategory = adsCategory;
         this.appOpenAdBlockingTitle = appOpenAdBlockingTitle;
         this.appOpenAdBlockingSummary = appOpenAdBlockingSummary;
+        this.displayAdBlockingTitle = displayAdBlockingTitle;
+        this.displayAdBlockingSummary = displayAdBlockingSummary;
         this.playerAdBlockingTitle = playerAdBlockingTitle;
         this.playerAdBlockingSummary = playerAdBlockingSummary;
         this.premiumPromotionHidingTitle = premiumPromotionHidingTitle;

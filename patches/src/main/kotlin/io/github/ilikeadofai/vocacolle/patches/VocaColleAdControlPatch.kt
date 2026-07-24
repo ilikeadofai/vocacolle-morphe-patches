@@ -17,6 +17,8 @@ private const val APP_OPEN_AD_PROVIDER = "Llg/c;"
 private const val AD_CONTROL =
     "Lio/github/ilikeadofai/vocacolle/extension/ads/AdControl;"
 private const val NO_AUDIO_AD = "Lcf/c\$c;"
+private const val DISPLAY_AD_CONTROLLER = "LBj/b;"
+private const val DISPLAY_AD_STATE = "LBj/a;"
 private const val PREMIUM_DIALOG =
     "Ljp/nicovideo/nicobox/ui/premiummerit/PremiumMeritLeadDialog;"
 private const val PREMIUM_DIALOG_FACTORY =
@@ -42,6 +44,15 @@ internal val audioAdContentFingerprint = Fingerprint(
     custom = { method, _ -> method.implementation?.registerCount == 10 }
 )
 
+internal val displayAdLoadFingerprint = Fingerprint(
+    definingClass = DISPLAY_AD_CONTROLLER,
+    name = "s",
+    returnType = "V",
+    parameters = emptyList(),
+    strings = listOf("loadAd("),
+    custom = { method, _ -> method.implementation?.registerCount == 11 }
+)
+
 private fun premiumPromotionFingerprint(
     definingClass: String,
     name: String,
@@ -64,6 +75,31 @@ private fun premiumPromotionFingerprint(
                     } == true
                 } == 1
         } == true
+    }
+)
+
+internal val homePremiumPromotionFingerprint = Fingerprint(
+    definingClass = "Ljp/nicovideo/nicobox/ui/home/HomeFragment;",
+    name = "N3",
+    returnType = "Lnl/L;",
+    parameters = listOf(
+        "Ljp/nicovideo/nicobox/ui/home/HomeFragment;",
+        "LFf/a;"
+    ),
+    custom = { method, _ ->
+        method.implementation?.registerCount == 4 &&
+            method.implementation?.instructions?.count {
+                val reference = (it as? ReferenceInstruction)?.reference as? FieldReference
+                reference?.definingClass ==
+                    "Ljp/nicovideo/nicobox/ui/premiummerit/PremiumMeritLeadInfoBottomSheetDialog;" &&
+                    reference.name == "i1"
+            } == 1 &&
+            method.implementation?.instructions?.count {
+                val reference = (it as? ReferenceInstruction)?.reference as? MethodReference
+                reference?.definingClass == "Landroidx/fragment/app/DialogFragment;" &&
+                    reference.name == "o2" &&
+                    reference.returnType == "V"
+            } == 1
     }
 )
 
@@ -119,12 +155,15 @@ val vocacolleAdControlPatch = bytecodePatch(
     default = false
 ) {
     compatibleWith(VOCACOLLE)
+    dependsOn(vocacolleMorpheSettingsPatch)
     extendWith("extensions/extension.mpe")
 
     execute {
         initializeAdControl()
         overrideAppOpenAdEligibility()
+        overrideDisplayAdLoad()
         overrideAudioAdContent()
+        suppressHomePremiumPromotion()
         premiumPromotionFingerprints.forEach { suppressPremiumPromotion(it) }
     }
 }
@@ -167,17 +206,97 @@ private fun overrideAppOpenAdEligibility() {
 
 context(_: BytecodePatchContext)
 private fun overrideAudioAdContent() {
-    audioAdContentFingerprint.method.addInstructionsWithLabels(
-        0,
+    val method = audioAdContentFingerprint.method
+    val instructions = method.implementation!!.instructions.toList()
+    val contextCallIndex = instructions.withIndex().single { (_, instruction) ->
+        ((instruction as? ReferenceInstruction)?.reference as? MethodReference)?.let {
+            it.definingClass == "Landroid/content/Context;" &&
+                it.name == "getApplicationContext" &&
+                it.parameterTypes.isEmpty() &&
+                it.returnType == "Landroid/content/Context;"
+        } == true
+    }.index
+    val contextResult = instructions[contextCallIndex + 1]
+    check(
+        contextResult.opcode == Opcode.MOVE_RESULT_OBJECT &&
+            (contextResult as OneRegisterInstruction).registerA == 9
+    ) { "Expected AudioAdContentProvider application context in v9" }
+
+    method.addInstructionsWithLabels(
+        contextCallIndex + 2,
         """
-            invoke-static {}, $AD_CONTROL->shouldBlockPlayerAds()Z
-            move-result v0
-            if-eqz v0, :original_audio_ad_content
-            sget-object v0, $NO_AUDIO_AD->a:$NO_AUDIO_AD
-            return-object v0
+            invoke-static {v9}, $AD_CONTROL->shouldBlockPlayerAds(Landroid/content/Context;)Z
+            move-result v2
+            if-eqz v2, :original_audio_ad_content
+            sget-object v2, $NO_AUDIO_AD->a:$NO_AUDIO_AD
+            return-object v2
             :original_audio_ad_content
             nop
         """.trimIndent()
+    )
+}
+
+context(_: BytecodePatchContext)
+private fun overrideDisplayAdLoad() {
+    val method = displayAdLoadFingerprint.method
+    val instructions = method.implementation!!.instructions.toList()
+    val contextCallIndex = instructions.withIndex().single { (_, instruction) ->
+        ((instruction as? ReferenceInstruction)?.reference as? MethodReference)?.let {
+            it.definingClass == "LNh/f;" &&
+                it.name == "a" &&
+                it.parameterTypes.isEmpty() &&
+                it.returnType == "Landroid/content/Context;"
+        } == true
+    }.index
+    val contextResult = instructions[contextCallIndex + 1]
+    check(
+        contextResult.opcode == Opcode.MOVE_RESULT_OBJECT &&
+            (contextResult as OneRegisterInstruction).registerA == 3
+    ) { "Expected display-ad application context in v3" }
+
+    method.addInstructionsWithLabels(
+        contextCallIndex + 2,
+        """
+            invoke-static {v3}, $AD_CONTROL->shouldBlockDisplayAds(Landroid/content/Context;)Z
+            move-result v0
+            if-eqz v0, :original_display_ad_load
+            invoke-static {p0}, $DISPLAY_AD_CONTROLLER->j($DISPLAY_AD_CONTROLLER)Landroidx/lifecycle/E;
+            move-result-object v0
+            sget-object v1, $DISPLAY_AD_STATE->b:$DISPLAY_AD_STATE
+            invoke-virtual {v0, v1}, Landroidx/lifecycle/E;->p(Ljava/lang/Object;)V
+            return-void
+            :original_display_ad_load
+            nop
+        """.trimIndent()
+    )
+}
+
+context(_: BytecodePatchContext)
+private fun suppressHomePremiumPromotion() {
+    val method = homePremiumPromotionFingerprint.method
+    val (index, instruction) = method.implementation!!.instructions.withIndex().single { (_, instruction) ->
+        ((instruction as? ReferenceInstruction)?.reference as? FieldReference)?.let {
+            it.definingClass ==
+                "Ljp/nicovideo/nicobox/ui/premiummerit/PremiumMeritLeadInfoBottomSheetDialog;" &&
+                it.name == "i1"
+        } == true
+    }
+    val register = (instruction as OneRegisterInstruction).registerA
+
+    method.replaceInstruction(
+        index,
+        "invoke-static {}, $AD_CONTROL->shouldHidePremiumPromotions()Z"
+    )
+    method.addInstructionsWithLabels(
+        index + 1,
+        """
+            move-result v$register
+            if-eqz v$register, :show_home_premium_promotion
+            sget-object v$register, Lnl/L;->a:Lnl/L;
+            return-object v$register
+            :show_home_premium_promotion
+            sget-object v$register, Ljp/nicovideo/nicobox/ui/premiummerit/PremiumMeritLeadInfoBottomSheetDialog;->i1:Ljp/nicovideo/nicobox/ui/premiummerit/PremiumMeritLeadInfoBottomSheetDialog${'$'}a;
+        """.trimIndent(),
     )
 }
 

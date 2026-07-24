@@ -37,6 +37,32 @@ internal fun requireGeneratedPatchBundle(file: File): File {
     return file
 }
 
+internal fun patchDependencyNames(
+    patch: Patch<*>,
+    availablePatches: Set<Patch<*>> = emptySet()
+): List<String> =
+    patch.dependencies.map { dependency ->
+        dependency.name ?: run {
+            // Morphe 1.6 reloads MPP dependency copies without their public names.
+            // Public patches still retain a unique execute-block owner; internal
+            // composite leaves fall back to the legacy patch implementation name.
+            val executionOwner = patchExecuteBlockClassName(dependency).substringBefore('$')
+            val matchingNames = availablePatches
+                .filter { candidate ->
+                    candidate.name != null &&
+                        patchExecuteBlockClassName(candidate).substringBefore('$') == executionOwner
+                }
+                .mapNotNull(Patch<*>::name)
+                .distinct()
+            matchingNames.singleOrNull() ?: dependency.javaClass.simpleName
+        }
+    }
+
+private fun patchExecuteBlockClassName(patch: Patch<*>): String {
+    val field = Patch::class.java.getDeclaredField("executeBlock").apply { isAccessible = true }
+    return field.get(patch).javaClass.name
+}
+
 @Suppress("DEPRECATION")
 private fun generatePatchList(version: String, patches: Set<Patch<*>>) {
     val listJson = File("../patches-list.json")
@@ -46,7 +72,7 @@ private fun generatePatchList(version: String, patches: Set<Patch<*>>) {
             name = patch.name!!,
             description = patch.description,
             default = patch.default,
-            dependencies = patch.dependencies.map { it.javaClass.simpleName },
+            dependencies = patchDependencyNames(patch, patches),
             // Map each Compatibility to a JsonCompatibility object with full metadata.
             // Patches with null compatiblePackages are universal (apply to any app).
             compatiblePackages = patch.compatibility?.map { compat ->
@@ -99,7 +125,7 @@ private fun generatePatchList(version: String, patches: Set<Patch<*>>) {
     jsonObject.addProperty("version", version)
     jsonObject.add("patches", gson.toJsonTree(patchesMap))
 
-    listJson.writeText(gson.toJson(jsonObject))
+    listJson.writeText(gson.toJson(jsonObject) + "\n")
 }
 
 /** JSON representation of a patch entry in patches-list.json. */
