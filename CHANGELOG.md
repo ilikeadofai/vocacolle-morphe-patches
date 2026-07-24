@@ -1,3 +1,9 @@
+## [1.2.0-dev.2](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.2.0-dev.1...v1.2.0-dev.2) (2026-07-24)
+
+### 🐛 Bug Fixes
+
+* harden ad surface controls ([70836ed](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/70836ed8d73645e80a7f57b0a06c2df95497c625))
+
 ## [1.2.0-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0...v1.2.0-dev.1) (2026-07-23)
 
 ### ✨ New Features

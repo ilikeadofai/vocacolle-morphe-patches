@@ -47,7 +47,7 @@ affordances remain available.
 ## Current patches
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.2.0-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.2.0-dev.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
+> **[v1.2.0-dev.2](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.2.0-dev.2)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
 <details open>
 <summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;6 patches</summary>
 <br>
