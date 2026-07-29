@@ -39,13 +39,6 @@ internal val appOpenAdAllowedFingerprint = Fingerprint(
     custom = { method, _ -> method.implementation?.registerCount == 8 }
 )
 
-internal val audioAdContentFingerprint = Fingerprint(
-    definingClass = "Lwh/b;",
-    name = "e",
-    returnType = "Ljava/lang/Object;",
-    parameters = listOf("Z", "Z", "Lsl/e;"),
-    custom = { method, _ -> method.implementation?.registerCount == 10 }
-)
 
 internal val displayAdLoadFingerprint = Fingerprint(
     definingClass = DISPLAY_AD_CONTROLLER,
@@ -205,7 +198,6 @@ val vocacolleAdControlPatch = bytecodePatch(
         initializeAdControl()
         overrideAppOpenAdEligibility()
         overrideDisplayAdLoad()
-        overrideAudioAdContent()
         suppressHomePremiumPromotion()
         suppressHighQualityPremiumSnackbar()
         premiumPromotionFingerprints.forEach { suppressPremiumPromotion(it) }
@@ -248,37 +240,6 @@ private fun overrideAppOpenAdEligibility() {
     )
 }
 
-context(_: BytecodePatchContext)
-private fun overrideAudioAdContent() {
-    val method = audioAdContentFingerprint.method
-    val instructions = method.implementation!!.instructions.toList()
-    val contextCallIndex = instructions.withIndex().single { (_, instruction) ->
-        ((instruction as? ReferenceInstruction)?.reference as? MethodReference)?.let {
-            it.definingClass == "Landroid/content/Context;" &&
-                it.name == "getApplicationContext" &&
-                it.parameterTypes.isEmpty() &&
-                it.returnType == "Landroid/content/Context;"
-        } == true
-    }.index
-    val contextResult = instructions[contextCallIndex + 1]
-    check(
-        contextResult.opcode == Opcode.MOVE_RESULT_OBJECT &&
-            (contextResult as OneRegisterInstruction).registerA == 9
-    ) { "Expected AudioAdContentProvider application context in v9" }
-
-    method.addInstructionsWithLabels(
-        contextCallIndex + 2,
-        """
-            invoke-static {v9}, $AD_CONTROL->shouldBlockPlayerAds(Landroid/content/Context;)Z
-            move-result v2
-            if-eqz v2, :original_audio_ad_content
-            sget-object v2, $NO_AUDIO_AD->a:$NO_AUDIO_AD
-            return-object v2
-            :original_audio_ad_content
-            nop
-        """.trimIndent()
-    )
-}
 
 context(_: BytecodePatchContext)
 private fun overrideDisplayAdLoad() {

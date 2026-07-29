@@ -319,7 +319,28 @@ Morphe 상세 화면은 다음을 재사용한다.
 
 ## 4.4 P0-D: 번역 core와 AI BYOK
 
-**상태: READY, metadata/공지/가사 번역의 공통 의존성**
+**상태: IN PROGRESS, exact VocaDB core·player title 연결 완료, 작품 상세/BYOK 대기**
+
+### 구현된 exact VocaDB 수직 슬라이스
+
+- 공식 `/api/songs/byPv`를 `pvService=NicoNicoDouga`와 `mediaId`로 조회한다.
+- 응답에 요청한 활성 NicoNico PV가 실제로 포함됐는지 다시 검증하고, 불일치하면
+  다른 곡 metadata를 표시하지 않고 실패한다.
+- 언어별 곡명과 `service=Youtube`, `pvType=Original`, `disabled=false`인 후보만
+  immutable model로 반환하며 중복 video ID를 제거한다.
+- HTTP 오류, 비JSON 응답, malformed JSON, unsafe media ID는 fail-closed한다.
+- 기존 bounded atomic `MorpheCache` 위에 typed metadata cache를 두고 positive 결과는
+  7일, 명시적 not-found는 6시간 보관한다. 유효한 cache hit는 offline에서도 사용한다.
+- Cache corruption은 해당 entry를 삭제하고 miss로 처리하며, cache read/write 장애는
+  fresh remote metadata 결과를 막지 않는다. Network 오류는 negative cache에 넣지 않는다.
+- 별도 `VocaDB player titles` patch와 설정 toggle은 모두 기본 OFF다. 설정 설명은 현재
+  NicoNico media ID가 VocaDB로 전송된다는 사실을 ja/en/ko로 명시한다.
+- Full player의 exact current-video observer에서만 async lookup을 시작한다. 첫 frame은
+  원문이고, 완료 시 `(mediaId, title)` presentation key가 여전히 current일 때 제목 state만
+  다시 발행한다. Queue, Media3 item, request, 작품 metadata는 수정하지 않는다.
+- Lookup executor는 유한 queue이고 media ID별 in-flight request를 dedupe한다. View와
+  ViewModel은 weak reference로 유지하며 stale/recycled/detached 결과는 폐기한다.
+- Toggle이나 master를 끄면 active player title을 즉시 원문으로 복귀시킨다.
 
 ### provider 순서
 
@@ -365,22 +386,45 @@ OpenAI-compatible 하나로 여러 서비스를 먼저 지원하고, request/res
 
 ### planned files
 
-- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/network/HttpClient.java`
+- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/network/MorpheHttpClient.java`
+- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/network/VocaDbClient.java`
+- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/network/VocaDbSong.java`
+- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/network/VocaDbMetadataCache.java`
+- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/network/VocaDbRepository.java`
+- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/metadata/MetadataControl.java`
+- `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/metadata/PlayerTitleEnrichment.java`
+- `patches/src/main/kotlin/io/github/ilikeadofai/vocacolle/patches/VocaColleVocaDbPlayerTitlePatch.kt`
+
+### remaining planned files
+
 - `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/security/SecretStore.java`
 - `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/translation/TranslationProvider.java`
 - `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/translation/OpenAiCompatibleProvider.java`
 - `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/translation/GeminiProvider.java`
 - `extensions/extension/src/main/java/io/github/ilikeadofai/vocacolle/extension/translation/TranslationCache.java`
 
+### 현재 검증 상태
+
+- VocaDB OpenAPI의 `/api/songs/byPv` query/response 계약 확인
+- exact match, explicit `null`, mismatched PV, HTTP 오류, content type, unsafe ID,
+  YouTube Original filtering·dedupe unit test 통과
+- positive/not-found TTL, malformed payload removal, offline cache hit, cache miss fetch-once,
+  cache I/O fail-open, network error non-caching, remote ID mismatch unit test 통과
+- 공식 VocaDB에서 `sm15630734` exact NicoNico PV와 song ID `8394` 실응답 smoke 통과
+- VocaColle 7.40.0 actual APK에서 ad-control과 player-title patch 동시 FULL DEX 적용,
+  exact `K4`/`J4` injection descriptor·register·ordering 검증 및 전체 DEX `dexdump` 통과
+- extension lint/test, patch test, `buildAndroid` 통과
+- 실기기 runtime title 전환과 process-death/cache 재사용 검증은 아직 남아 있다.
+
 ## 4.5 P0-E: 곡 제목·작품 상세 번역
 
-**상태: READY**
+**상태: IN PROGRESS, player title 구현 완료·작품 상세 대기**
 
 ### source/matching
 
 1. `mediaId`로 VocaDB `/api/songs/byPv` exact lookup
-2. exact PV가 없을 때만 title + artist + duration 후보 검색
-3. 후보 검색은 score threshold를 넘지 못하면 사용하지 않는다.
+2. 향후 exact PV가 없을 때만 title + artist + duration 후보 검색
+3. 향후 후보 검색은 score threshold를 넘지 못하면 사용하지 않는다.
 
 VocaDB API는 NicoNico `pvId`, English/Japanese/Romaji names, artists, lyrics, tags를 반환하는 것을 확인했다.
 

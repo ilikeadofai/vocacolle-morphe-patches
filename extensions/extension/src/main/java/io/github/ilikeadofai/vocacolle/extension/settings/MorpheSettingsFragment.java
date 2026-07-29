@@ -26,6 +26,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import io.github.ilikeadofai.vocacolle.extension.ads.AdControl;
 import io.github.ilikeadofai.vocacolle.extension.cache.MorpheCache;
+import io.github.ilikeadofai.vocacolle.extension.metadata.MetadataControl;
+import io.github.ilikeadofai.vocacolle.extension.metadata.PlayerTitleEnrichment;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Locale;
@@ -42,6 +44,7 @@ public final class MorpheSettingsFragment extends Fragment {
 
     private SettingsStore settingsStore;
     private Switch runtimeFeaturesSwitch;
+    private Switch vocaDbMetadataSwitch;
     private Switch appOpenAdBlockingSwitch;
     private Switch displayAdBlockingSwitch;
     private Switch playerAdBlockingSwitch;
@@ -137,9 +140,12 @@ public final class MorpheSettingsFragment extends Fragment {
         runtimeRow.root.setOnClickListener(ignored ->
                 runtimeFeaturesSwitch.setChecked(!runtimeFeaturesSwitch.isChecked())
         );
-        runtimeFeaturesSwitch.setOnCheckedChangeListener((ignored, checked) ->
-                settingsStore.setRuntimeFeaturesEnabled(checked)
-        );
+        runtimeFeaturesSwitch.setOnCheckedChangeListener((ignored, checked) -> {
+            settingsStore.setRuntimeFeaturesEnabled(checked);
+            if (!checked) {
+                PlayerTitleEnrichment.restoreOriginalTitles();
+            }
+        });
         content.addView(runtimeRow.root);
         content.addView(createDivider(activity, palette, dp(activity, 20)));
 
@@ -152,6 +158,34 @@ public final class MorpheSettingsFragment extends Fragment {
                 null
         );
         content.addView(diagnostics.root);
+
+        if (MetadataControl.areHooksInstalled()) {
+            addSectionTitle(content, strings.metadataCategory, palette, false);
+
+            vocaDbMetadataSwitch = new Switch(activity);
+            vocaDbMetadataSwitch.setChecked(
+                    settingsStore.isVocaDbMetadataEnrichmentEnabled()
+            );
+            tintSwitch(vocaDbMetadataSwitch, palette);
+            RowViews vocaDbMetadataRow = createSettingRow(
+                    activity,
+                    strings.vocaDbMetadataTitle,
+                    strings.vocaDbMetadataSummary,
+                    palette,
+                    true,
+                    vocaDbMetadataSwitch
+            );
+            vocaDbMetadataRow.root.setOnClickListener(ignored ->
+                    vocaDbMetadataSwitch.setChecked(!vocaDbMetadataSwitch.isChecked())
+            );
+            vocaDbMetadataSwitch.setOnCheckedChangeListener((ignored, checked) -> {
+                settingsStore.setVocaDbMetadataEnrichmentEnabled(checked);
+                if (!checked) {
+                    PlayerTitleEnrichment.restoreOriginalTitles();
+                }
+            });
+            content.addView(vocaDbMetadataRow.root);
+        }
 
         if (AdControl.areHooksInstalled()) {
         addSectionTitle(content, strings.adsCategory, palette, false);
@@ -325,6 +359,11 @@ public final class MorpheSettingsFragment extends Fragment {
         if (runtimeFeaturesSwitch != null && settingsStore != null) {
             runtimeFeaturesSwitch.setChecked(settingsStore.areRuntimeFeaturesEnabled());
         }
+        if (vocaDbMetadataSwitch != null && settingsStore != null) {
+            vocaDbMetadataSwitch.setChecked(
+                    settingsStore.isVocaDbMetadataEnrichmentEnabled()
+            );
+        }
         if (appOpenAdBlockingSwitch != null && settingsStore != null) {
             appOpenAdBlockingSwitch.setChecked(settingsStore.isAppOpenAdBlockingEnabled());
         }
@@ -342,6 +381,7 @@ public final class MorpheSettingsFragment extends Fragment {
     @Override
     public void onDestroyView() {
         runtimeFeaturesSwitch = null;
+        vocaDbMetadataSwitch = null;
         appOpenAdBlockingSwitch = null;
         displayAdBlockingSwitch = null;
         playerAdBlockingSwitch = null;

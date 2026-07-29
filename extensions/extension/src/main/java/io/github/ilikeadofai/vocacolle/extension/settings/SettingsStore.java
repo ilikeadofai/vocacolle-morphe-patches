@@ -8,6 +8,7 @@ import android.preference.PreferenceManager;
 @SuppressWarnings("deprecation")
 public final class SettingsStore {
     private static final boolean DEFAULT_RUNTIME_FEATURES_ENABLED = true;
+    private static final boolean DEFAULT_VOCADB_METADATA_ENRICHMENT_ENABLED = false;
     private static final boolean DEFAULT_APP_OPEN_AD_BLOCKING_ENABLED = false;
     private static final boolean DEFAULT_PLAYER_AD_BLOCKING_ENABLED = false;
     private static final boolean DEFAULT_DISPLAY_AD_BLOCKING_ENABLED = false;
@@ -42,6 +43,17 @@ public final class SettingsStore {
 
     public void setRuntimeFeaturesEnabled(boolean enabled) {
         backend.putBoolean(SettingKeys.RUNTIME_FEATURES_ENABLED, enabled);
+    }
+
+    public boolean isVocaDbMetadataEnrichmentEnabled() {
+        return backend.getBoolean(
+                SettingKeys.VOCADB_METADATA_ENRICHMENT_ENABLED,
+                DEFAULT_VOCADB_METADATA_ENRICHMENT_ENABLED
+        );
+    }
+
+    public void setVocaDbMetadataEnrichmentEnabled(boolean enabled) {
+        backend.putBoolean(SettingKeys.VOCADB_METADATA_ENRICHMENT_ENABLED, enabled);
     }
 
     public boolean isAppOpenAdBlockingEnabled() {

@@ -186,6 +186,34 @@
         }
       ],
       "options": []
+    },
+    {
+      "name": "VocaDB player titles",
+      "description": "Adds opt-in exact VocaDB title metadata to the full player.",
+      "default": false,
+      "dependencies": [
+        "VocaColle Morphe settings"
+      ],
+      "compatiblePackages": [
+        {
+          "packageName": "jp.nicovideo.nicobox",
+          "name": "VocaColle",
+          "description": null,
+          "apkFileType": "APK",
+          "appIconColor": null,
+          "signatures": null,
+          "targets": [
+            {
+              "version": "7.40.0",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
     }
   ]
 }

@@ -67,6 +67,17 @@ public class SettingsStoreTest {
         assertTrue(restartedProcess.isPremiumPromotionHidingEnabled());
     }
 
+    @Test
+    public void vocaDbMetadataEnrichmentDefaultsOffAndPersistsChanges() {
+        InMemoryBackend backend = new InMemoryBackend();
+        SettingsStore firstProcess = new SettingsStore(backend);
+
+        assertFalse(firstProcess.isVocaDbMetadataEnrichmentEnabled());
+        firstProcess.setVocaDbMetadataEnrichmentEnabled(true);
+
+        assertTrue(new SettingsStore(backend).isVocaDbMetadataEnrichmentEnabled());
+    }
+
     private static final class InMemoryBackend implements SettingsStore.Backend {
         private final Map<String, Boolean> values = new HashMap<>();
         private final Map<String, String> stringValues = new HashMap<>();
