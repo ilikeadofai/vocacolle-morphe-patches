@@ -229,18 +229,35 @@ class VocaColleAdControlApkTest {
         val displayAdGuardInvoke = displayAdInstructions[displayAdGuardIndex] as FiveRegisterInstruction
         assertEquals(1, displayAdGuardInvoke.registerCount)
         assertEquals(3, displayAdGuardInvoke.registerC)
+        assertEquals(
+            4,
+            (displayAdInstructions[displayAdGuardIndex + 1] as OneRegisterInstruction).registerA,
+            "Display-ad policy result must not overwrite the live v0 logger"
+        )
         val displayStateAccessor =
             (displayAdInstructions[displayAdGuardIndex + 3] as ReferenceInstruction).reference as MethodReference
         assertEquals("LBj/b;", displayStateAccessor.definingClass)
         assertEquals("j", displayStateAccessor.name)
+        assertEquals(
+            4,
+            (displayAdInstructions[displayAdGuardIndex + 4] as OneRegisterInstruction).registerA
+        )
         val displayNoneState =
             (displayAdInstructions[displayAdGuardIndex + 5] as ReferenceInstruction).reference as FieldReference
         assertEquals("LBj/a;", displayNoneState.definingClass)
         assertEquals("b", displayNoneState.name)
+        assertEquals(
+            5,
+            (displayAdInstructions[displayAdGuardIndex + 5] as OneRegisterInstruction).registerA
+        )
         val displayStatePublisher =
             (displayAdInstructions[displayAdGuardIndex + 6] as ReferenceInstruction).reference as MethodReference
         assertEquals("Landroidx/lifecycle/E;", displayStatePublisher.definingClass)
         assertEquals("p", displayStatePublisher.name)
+        val displayStatePublishInstruction =
+            displayAdInstructions[displayAdGuardIndex + 6] as FiveRegisterInstruction
+        assertEquals(4, displayStatePublishInstruction.registerC)
+        assertEquals(5, displayStatePublishInstruction.registerD)
 
         val premiumHookedMethods = mutableSetOf<String>()
         var registrationLauncherAdControlReferences = -1

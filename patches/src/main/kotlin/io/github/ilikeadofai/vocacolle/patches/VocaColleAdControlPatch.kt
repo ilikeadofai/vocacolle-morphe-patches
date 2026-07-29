@@ -258,12 +258,12 @@ private fun overrideDisplayAdLoad() {
         contextCallIndex + 2,
         """
             invoke-static {v3}, $AD_CONTROL->shouldBlockDisplayAds(Landroid/content/Context;)Z
-            move-result v0
-            if-eqz v0, :original_display_ad_load
+            move-result v4
+            if-eqz v4, :original_display_ad_load
             invoke-static {p0}, $DISPLAY_AD_CONTROLLER->j($DISPLAY_AD_CONTROLLER)Landroidx/lifecycle/E;
-            move-result-object v0
-            sget-object v1, $DISPLAY_AD_STATE->b:$DISPLAY_AD_STATE
-            invoke-virtual {v0, v1}, Landroidx/lifecycle/E;->p(Ljava/lang/Object;)V
+            move-result-object v4
+            sget-object v5, $DISPLAY_AD_STATE->b:$DISPLAY_AD_STATE
+            invoke-virtual {v4, v5}, Landroidx/lifecycle/E;->p(Ljava/lang/Object;)V
             return-void
             :original_display_ad_load
             nop
