@@ -1,3 +1,9 @@
+## [1.2.0-dev.3](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.2.0-dev.2...v1.2.0-dev.3) (2026-07-29)
+
+### 🐛 Bug Fixes
+
+* preserve display ad logger register ([2a5080e](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/2a5080ea5bad369d1d9b3471b350690e75a5cbcf))
+
 ## [1.2.0-dev.2](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.2.0-dev.1...v1.2.0-dev.2) (2026-07-24)
 
 ### 🐛 Bug Fixes
