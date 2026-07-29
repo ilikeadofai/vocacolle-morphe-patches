@@ -79,6 +79,24 @@ class VocaColleAdControlPatchTest {
     }
 
     @Test
+    fun `fingerprints the automatic high quality playback premium snackbar`() {
+        assertEquals(
+            "Ljp/nicovideo/nicobox/ui/player/PlayerFragment;",
+            highQualityPremiumSnackbarFingerprint.definingClass
+        )
+        assertEquals("y4", highQualityPremiumSnackbarFingerprint.name)
+        assertEquals("Lnl/L;", highQualityPremiumSnackbarFingerprint.returnType)
+        assertEquals(
+            listOf(
+                "Ljp/nicovideo/nicobox/ui/player/PlayerFragment;",
+                "Lwh/l;"
+            ),
+            highQualityPremiumSnackbarFingerprint.parameters
+        )
+        assertNotNull(highQualityPremiumSnackbarFingerprint.custom)
+    }
+
+    @Test
     fun `fingerprints exactly seven automatic premium lead callsites`() {
         assertEquals(7, premiumPromotionFingerprints.size)
         assertEquals(

@@ -285,14 +285,19 @@ class VocaColleAdControlApkTest {
                                     reference.name == "shouldHidePremiumPromotions"
                             }
                             if (!dexClass.type.endsWith("/ads/AdControl;") && premiumHookIndex >= 0) {
-                                premiumHookedMethods +=
-                                    "${dexClass.type}->${method.name}(" +
-                                        method.parameterTypes.joinToString("") + ")${method.returnType}"
+                                val hookedMethod = "${dexClass.type}->${method.name}(" +
+                                    method.parameterTypes.joinToString("") + ")${method.returnType}"
+                                premiumHookedMethods += hookedMethod
+                                val isHighQualitySnackbar = hookedMethod ==
+                                    "Ljp/nicovideo/nicobox/ui/player/PlayerFragment;->" +
+                                    "y4(Ljp/nicovideo/nicobox/ui/player/PlayerFragment;Lwh/l;)Lnl/L;"
                                 val guardedOpcodes = instructions.drop(premiumHookIndex + 1)
                                     .take(if (method.returnType == "V") 4 else 5)
                                     .map { it.opcode.name }
                                 assertEquals(
-                                    if (method.returnType == "V") {
+                                    if (isHighQualitySnackbar) {
+                                        listOf("move-result", "if-eqz", "sget-object", "return-object", "const")
+                                    } else if (method.returnType == "V") {
                                         listOf("move-result", "if-eqz", "return-void", "sget-object")
                                     } else {
                                         listOf(
@@ -302,6 +307,41 @@ class VocaColleAdControlApkTest {
                                     guardedOpcodes,
                                     "Unexpected Premium guard shape in ${dexClass.type}->${method.name}"
                                 )
+                                if (isHighQualitySnackbar) {
+                                    assertEquals(
+                                        6,
+                                        (instructions[premiumHookIndex + 1] as OneRegisterInstruction).registerA
+                                    )
+                                    assertEquals(
+                                        6,
+                                        (instructions[premiumHookIndex + 2] as OneRegisterInstruction).registerA
+                                    )
+                                    val unitField =
+                                        (instructions[premiumHookIndex + 3]
+                                            as ReferenceInstruction).reference as FieldReference
+                                    assertEquals("Lnl/L;", unitField.definingClass)
+                                    assertEquals("a", unitField.name)
+                                    assertEquals("Lnl/L;", unitField.type)
+                                    assertEquals(
+                                        6,
+                                        (instructions[premiumHookIndex + 3] as OneRegisterInstruction).registerA
+                                    )
+                                    assertEquals(
+                                        6,
+                                        (instructions[premiumHookIndex + 4] as OneRegisterInstruction).registerA
+                                    )
+                                    assertEquals(
+                                        0x7f130553,
+                                        (instructions[premiumHookIndex + 5]
+                                            as NarrowLiteralInstruction).narrowLiteral
+                                    )
+                                    assertEquals(
+                                        4,
+                                        (instructions[premiumHookIndex + 5]
+                                            as OneRegisterInstruction).registerA
+                                    )
+                                    return@forEach
+                                }
                                 val restoredFieldOffset = if (method.returnType == "V") 4 else 5
                                 val restoredField =
                                     (instructions[premiumHookIndex + restoredFieldOffset]
@@ -381,7 +421,9 @@ class VocaColleAdControlApkTest {
                 "Ljp/nicovideo/nicobox/ui/setting/player/PlayerSettingFragment;->" +
                     "o2(Ljp/nicovideo/nicobox/ui/setting/player/PlayerSettingFragment;Z)Lnl/L;",
                 "Ljp/nicovideo/nicobox/ui/home/HomeFragment;->" +
-                    "N3(Ljp/nicovideo/nicobox/ui/home/HomeFragment;LFf/a;)Lnl/L;"
+                    "N3(Ljp/nicovideo/nicobox/ui/home/HomeFragment;LFf/a;)Lnl/L;",
+                "Ljp/nicovideo/nicobox/ui/player/PlayerFragment;->" +
+                    "y4(Ljp/nicovideo/nicobox/ui/player/PlayerFragment;Lwh/l;)Lnl/L;"
             ),
             premiumHookedMethods
         )

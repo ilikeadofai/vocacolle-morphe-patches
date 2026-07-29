@@ -9,6 +9,7 @@ import app.morphe.patcher.patch.bytecodePatch
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.WideLiteralInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import io.github.ilikeadofai.vocacolle.patches.shared.Constants.VOCACOLLE
@@ -19,6 +20,8 @@ private const val AD_CONTROL =
 private const val NO_AUDIO_AD = "Lcf/c\$c;"
 private const val DISPLAY_AD_CONTROLLER = "LBj/b;"
 private const val DISPLAY_AD_STATE = "LBj/a;"
+private const val HIGH_QUALITY_PREMIUM_MESSAGE = 0x7f130553
+private const val HIGH_QUALITY_PREMIUM_ACTION = 0x7f130554
 private const val PREMIUM_DIALOG =
     "Ljp/nicovideo/nicobox/ui/premiummerit/PremiumMeritLeadDialog;"
 private const val PREMIUM_DIALOG_FACTORY =
@@ -103,6 +106,46 @@ internal val homePremiumPromotionFingerprint = Fingerprint(
     }
 )
 
+internal val highQualityPremiumSnackbarFingerprint = Fingerprint(
+    definingClass = "Ljp/nicovideo/nicobox/ui/player/PlayerFragment;",
+    name = "y4",
+    returnType = "Lnl/L;",
+    parameters = listOf(
+        "Ljp/nicovideo/nicobox/ui/player/PlayerFragment;",
+        "Lwh/l;"
+    ),
+    custom = { method, _ ->
+        method.implementation?.let { implementation ->
+            val instructions = implementation.instructions
+            implementation.registerCount == 9 &&
+                instructions.count {
+                    (it as? WideLiteralInstruction)?.wideLiteral ==
+                        HIGH_QUALITY_PREMIUM_MESSAGE.toLong()
+                } == 1 &&
+                instructions.count {
+                    (it as? WideLiteralInstruction)?.wideLiteral ==
+                        HIGH_QUALITY_PREMIUM_ACTION.toLong()
+                } == 1 &&
+                instructions.count {
+                    ((it as? ReferenceInstruction)?.reference as? MethodReference)?.let { reference ->
+                        reference.definingClass ==
+                            "Ljp/nicovideo/nicobox/ui/player/PlayerContainerView;" &&
+                            reference.name == "setMediaAudioQualityInfo" &&
+                            reference.returnType == "V"
+                    } == true
+                } == 1 &&
+                instructions.count {
+                    ((it as? ReferenceInstruction)?.reference as? MethodReference)?.let { reference ->
+                        reference.definingClass ==
+                            "Lcom/google/android/material/snackbar/Snackbar;" &&
+                            reference.name == "Y" &&
+                            reference.returnType == "V"
+                    } == true
+                } == 1
+        } == true
+    }
+)
+
 internal val premiumPromotionFingerprints = listOf(
     premiumPromotionFingerprint(
         "LZi/r;", "v", "V", listOf("Landroidx/fragment/app/u;"),
@@ -164,6 +207,7 @@ val vocacolleAdControlPatch = bytecodePatch(
         overrideDisplayAdLoad()
         overrideAudioAdContent()
         suppressHomePremiumPromotion()
+        suppressHighQualityPremiumSnackbar()
         premiumPromotionFingerprints.forEach { suppressPremiumPromotion(it) }
     }
 }
@@ -297,6 +341,31 @@ private fun suppressHomePremiumPromotion() {
             :show_home_premium_promotion
             sget-object v$register, Ljp/nicovideo/nicobox/ui/premiummerit/PremiumMeritLeadInfoBottomSheetDialog;->i1:Ljp/nicovideo/nicobox/ui/premiummerit/PremiumMeritLeadInfoBottomSheetDialog${'$'}a;
         """.trimIndent(),
+    )
+}
+
+context(_: BytecodePatchContext)
+private fun suppressHighQualityPremiumSnackbar() {
+    val method = highQualityPremiumSnackbarFingerprint.method
+    val messageIndex = method.implementation!!.instructions.withIndex().single { (_, instruction) ->
+        (instruction as? WideLiteralInstruction)?.wideLiteral ==
+            HIGH_QUALITY_PREMIUM_MESSAGE.toLong()
+    }.index
+
+    method.replaceInstruction(
+        messageIndex,
+        "invoke-static {}, $AD_CONTROL->shouldHidePremiumPromotions()Z"
+    )
+    method.addInstructionsWithLabels(
+        messageIndex + 1,
+        """
+            move-result v6
+            if-eqz v6, :show_high_quality_premium_snackbar
+            sget-object v6, Lnl/L;->a:Lnl/L;
+            return-object v6
+            :show_high_quality_premium_snackbar
+            const v4, $HIGH_QUALITY_PREMIUM_MESSAGE
+        """.trimIndent()
     )
 }
 
