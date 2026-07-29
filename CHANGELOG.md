@@ -1,3 +1,9 @@
+## [1.2.0-dev.4](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.2.0-dev.3...v1.2.0-dev.4) (2026-07-29)
+
+### 🐛 Bug Fixes
+
+* suppress player premium snackbar ([4bc3797](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/4bc379722e7a1a119470482cadf7148ee6941ec1))
+
 ## [1.2.0-dev.3](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.2.0-dev.2...v1.2.0-dev.3) (2026-07-29)
 
 ### 🐛 Bug Fixes
