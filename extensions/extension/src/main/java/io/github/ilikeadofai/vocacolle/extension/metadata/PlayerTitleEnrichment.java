@@ -30,6 +30,8 @@ public final class PlayerTitleEnrichment {
             new WeakHashMap<>()
     );
     private static final ConcurrentHashMap<String, Boolean> IN_FLIGHT = new ConcurrentHashMap<>();
+    // ponytail: process-lifetime cache; bound it only if real long-running sessions show growth.
+    private static final ConcurrentHashMap<String, String> RESOLVED_TITLES = new ConcurrentHashMap<>();
     private static volatile VocaDbRepository repository;
 
     private PlayerTitleEnrichment() { }
@@ -55,6 +57,18 @@ public final class PlayerTitleEnrichment {
                 sensitiveMaskingRequired
         ));
         if (!MetadataControl.shouldEnrichPlayerTitles(anchor.getContext())) {
+            return;
+        }
+        String remembered = rememberedTitle(mediaId, originalTitle);
+        if (remembered != null) {
+            PlayerTitleBridge.publish(
+                    playerViewModel,
+                    remembered,
+                    ownerName,
+                    mediaId,
+                    position,
+                    sensitiveMaskingRequired
+            );
             return;
         }
         if (IN_FLIGHT.putIfAbsent(mediaId, Boolean.TRUE) != null) {
@@ -200,6 +214,7 @@ public final class PlayerTitleEnrichment {
     }
 
     private static void applyResolvedTitle(String mediaId, String title) {
+        rememberResolvedTitle(mediaId, title);
         List<Map.Entry<View, Binding>> bindings;
         synchronized (BINDINGS) {
             bindings = new ArrayList<>(BINDINGS.entrySet());
@@ -223,6 +238,17 @@ public final class PlayerTitleEnrichment {
                     binding.sensitiveMaskingRequired
             );
         }
+    }
+
+    static void rememberResolvedTitle(String mediaId, String title) {
+        if (mediaId != null && title != null && !title.isEmpty()) {
+            RESOLVED_TITLES.put(mediaId, title);
+        }
+    }
+
+    static String rememberedTitle(String mediaId, String originalTitle) {
+        String title = RESOLVED_TITLES.get(mediaId);
+        return title == null || title.equals(originalTitle) ? null : title;
     }
 
     private static final class Binding {

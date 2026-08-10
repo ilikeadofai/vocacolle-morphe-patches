@@ -7,6 +7,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.bytecodePatch
 import com.android.tools.smali.dexlib2.Opcode
+import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.WideLiteralInstruction
@@ -18,6 +19,12 @@ private const val APP_OPEN_AD_PROVIDER = "Llg/c;"
 private const val AD_CONTROL =
     "Lio/github/ilikeadofai/vocacolle/extension/ads/AdControl;"
 private const val NO_AUDIO_AD = "Lcf/c\$c;"
+private const val AUDIO_AD_COMPLETED = "Lcf/a\$a;"
+private const val AUDIO_AD_LOADING = "Lcf/a\$c;"
+private const val AUDIO_AD_EVENT_HANDLER =
+    "Ljp/nicovideo/nicobox/service/player/g\$a;"
+private const val NETWORK_AUDIO_AD_FALLBACK =
+    "Ljp/nicovideo/nicobox/service/player/d\$k\$a;"
 private const val DISPLAY_AD_CONTROLLER = "LBj/b;"
 private const val DISPLAY_AD_STATE = "LBj/a;"
 private const val HIGH_QUALITY_PREMIUM_MESSAGE = 0x7f130553
@@ -39,6 +46,81 @@ internal val appOpenAdAllowedFingerprint = Fingerprint(
     custom = { method, _ -> method.implementation?.registerCount == 8 }
 )
 
+internal val audioAdContentFingerprint = Fingerprint(
+    definingClass = "Lwh/b;",
+    name = "e",
+    returnType = "Ljava/lang/Object;",
+    parameters = listOf("Z", "Z", "Lsl/e;"),
+    custom = { method, _ -> method.implementation?.registerCount == 10 }
+)
+
+internal val audioAdEventDispatchFingerprint = Fingerprint(
+    definingClass = AUDIO_AD_EVENT_HANDLER,
+    name = "b",
+    returnType = "V",
+    parameters = listOf("Lcf/a;"),
+    strings = listOf("audioAdEvent"),
+    custom = { method, _ -> method.implementation?.registerCount == 4 }
+)
+
+internal val networkAudioAdFallbackFingerprint = Fingerprint(
+    definingClass = NETWORK_AUDIO_AD_FALLBACK,
+    name = "invokeSuspend",
+    returnType = "Ljava/lang/Object;",
+    parameters = listOf("Ljava/lang/Object;"),
+    custom = { method, _ ->
+        method.implementation?.let { implementation ->
+            val references = implementation.instructions.mapNotNull { instruction ->
+                (instruction as? ReferenceInstruction)?.reference as? MethodReference
+            }
+            implementation.registerCount == 28 &&
+                references.count {
+                    it.definingClass == "Lwh/f;" && it.name == "r" &&
+                        it.parameterTypes.map(CharSequence::toString) ==
+                        listOf("Landroid/content/Context;", "Lce/c;", "Lsl/e;") &&
+                        it.returnType == "Ljava/lang/Object;"
+                } == 1 &&
+                references.count {
+                    it.definingClass == "Lwh/f;" && it.name == "D" &&
+                        it.parameterTypes.map(CharSequence::toString) == listOf("Ljava/lang/String;") &&
+                        it.returnType == "V"
+                } == 1 &&
+                references.count {
+                    it.definingClass == "Lwh/f;" && it.name == "t" &&
+                        it.parameterTypes.map(CharSequence::toString) == listOf("Lsl/e;") &&
+                        it.returnType == "Ljava/lang/Object;"
+                } == 1
+        } == true
+    }
+)
+
+internal val playerConnectionSetupFingerprint = Fingerprint(
+    definingClass = "Ljp/nicovideo/nicobox/ui/player/o;",
+    name = "X",
+    returnType = "V",
+    parameters = listOf("Landroid/content/Context;"),
+    strings = listOf("context"),
+    custom = { method, _ ->
+        method.implementation?.let { implementation ->
+            val references = implementation.instructions.mapNotNull { instruction ->
+                (instruction as? ReferenceInstruction)?.reference as? MethodReference
+            }
+            implementation.registerCount == 10 &&
+                references.count {
+                    it.definingClass == "Ljp/nicovideo/nicobox/ui/player/e;" &&
+                        it.name == "k" && it.returnType == "V" &&
+                        it.parameterTypes.map(CharSequence::toString) ==
+                        listOf("Ljp/nicovideo/nicobox/ui/player/e\$d;")
+                } == 1 &&
+                references.count {
+                    it.definingClass == "Ljp/nicovideo/nicobox/ui/player/e;" &&
+                        it.name == "j" && it.returnType == "V" &&
+                        it.parameterTypes.map(CharSequence::toString) ==
+                        listOf("Ljp/nicovideo/nicobox/ui/player/e\$c;")
+                } == 1
+        } == true
+    }
+)
 
 internal val displayAdLoadFingerprint = Fingerprint(
     definingClass = DISPLAY_AD_CONTROLLER,
@@ -198,6 +280,11 @@ val vocacolleAdControlPatch = bytecodePatch(
         initializeAdControl()
         overrideAppOpenAdEligibility()
         overrideDisplayAdLoad()
+        overrideAudioAdContent()
+        completeBlockedAudioAdEvent()
+        suppressBlockedNetworkAudioAdFallback()
+        completeBlockedAudioAdStateOnListenerAttach()
+        resetStaleProgressOnMediaChange()
         suppressHomePremiumPromotion()
         suppressHighQualityPremiumSnackbar()
         premiumPromotionFingerprints.forEach { suppressPremiumPromotion(it) }
@@ -240,6 +327,160 @@ private fun overrideAppOpenAdEligibility() {
     )
 }
 
+context(_: BytecodePatchContext)
+private fun overrideAudioAdContent() {
+    val method = audioAdContentFingerprint.method
+    val instructions = method.implementation!!.instructions.toList()
+    val localAudioReturnIndex = instructions.withIndex().single { (_, instruction) ->
+        instruction.opcode == Opcode.RETURN_OBJECT &&
+            (instruction as OneRegisterInstruction).registerA == 0
+    }.index
+    val wrappedAudioConstructorIndex = instructions.withIndex().single { (_, instruction) ->
+        ((instruction as? ReferenceInstruction)?.reference as? MethodReference)?.let {
+            it.definingClass == "Lcf/c\$b;" &&
+                it.name == "<init>" &&
+                it.parameterTypes.map(CharSequence::toString) == listOf("Lcf/c\$a;") &&
+                it.returnType == "V"
+        } == true
+    }.index
+    val wrappedAudioReturnIndex = wrappedAudioConstructorIndex + 1
+    check(
+        instructions[wrappedAudioReturnIndex].opcode == Opcode.RETURN_OBJECT &&
+            (instructions[wrappedAudioReturnIndex] as OneRegisterInstruction).registerA == 7
+    ) { "Expected wrapped audio content to return immediately after construction" }
+
+    listOf(
+        localAudioReturnIndex to "local",
+        wrappedAudioReturnIndex to "wrapped"
+    ).sortedByDescending { it.first }.forEach { (returnIndex, labelSuffix) ->
+        method.addInstructionsWithLabels(
+            returnIndex,
+            """
+                invoke-static {}, $AD_CONTROL->shouldBlockPlayerAds()Z
+                move-result v1
+                if-eqz v1, :original_audio_ad_content_$labelSuffix
+                sget-object v1, $NO_AUDIO_AD->a:$NO_AUDIO_AD
+                return-object v1
+                :original_audio_ad_content_$labelSuffix
+                nop
+            """.trimIndent()
+        )
+    }
+}
+
+context(_: BytecodePatchContext)
+private fun completeBlockedAudioAdEvent() {
+    val method = audioAdEventDispatchFingerprint.method
+    method.addInstructionsWithLabels(
+        0,
+        """
+            invoke-static {}, $AD_CONTROL->shouldBlockPlayerAds()Z
+            move-result v0
+            if-eqz v0, :audio_ad_event_original
+            instance-of v0, p1, $AUDIO_AD_LOADING
+            if-eqz v0, :audio_ad_event_original
+            sget-object v0, $AUDIO_AD_COMPLETED->a:$AUDIO_AD_COMPLETED
+            move-object p1, v0
+            :audio_ad_event_original
+            nop
+        """.trimIndent()
+    )
+}
+
+context(_: BytecodePatchContext)
+private fun suppressBlockedNetworkAudioAdFallback() {
+    networkAudioAdFallbackFingerprint.method.addInstructionsWithLabels(
+        0,
+        """
+            invoke-static {}, $AD_CONTROL->shouldBlockPlayerAds()Z
+            move-result v0
+            if-eqz v0, :original_network_audio_ad_fallback
+            sget-object v0, Lnl/L;->a:Lnl/L;
+            return-object v0
+            :original_network_audio_ad_fallback
+            nop
+        """.trimIndent()
+    )
+}
+
+context(_: BytecodePatchContext)
+private fun completeBlockedAudioAdStateOnListenerAttach() {
+    val method = playerConnectionSetupFingerprint.method
+    val instructions = method.implementation!!.instructions.toList()
+    val listenerRegistrationIndex = instructions.indexOfFirst { instruction ->
+        ((instruction as? ReferenceInstruction)?.reference as? MethodReference)?.let {
+            it.definingClass == "Ljp/nicovideo/nicobox/ui/player/e;" &&
+                it.name == "j" && it.returnType == "V" &&
+                it.parameterTypes.map(CharSequence::toString) ==
+                listOf("Ljp/nicovideo/nicobox/ui/player/e\$c;")
+        } == true
+    }
+    require(listenerRegistrationIndex >= 0) { "Player custom-event listener registration not found" }
+
+    val listenerRegistration = instructions[listenerRegistrationIndex] as FiveRegisterInstruction
+    require(listenerRegistration.registerCount == 2)
+    require(listenerRegistration.registerC == 0) { "Expected player connection in v0" }
+    require(listenerRegistration.registerD == 1) { "Expected custom-event listener in v1" }
+    require((instructions[listenerRegistrationIndex + 1] as? ReferenceInstruction)?.reference.let {
+        (it as? FieldReference)?.let { field ->
+            field.definingClass == "Ljp/nicovideo/nicobox/ui/player/o;" &&
+                field.name == "N0" && field.type == "Ljp/nicovideo/nicobox/ui/player/e;"
+        } == true
+    }) { "Expected original connection store immediately after listener registration" }
+
+    method.addInstructionsWithLabels(
+        listenerRegistrationIndex + 1,
+        """
+            invoke-static {}, $AD_CONTROL->shouldBlockPlayerAds()Z
+            move-result v2
+            if-eqz v2, :original_connection_store
+            sget-object v2, $AUDIO_AD_COMPLETED->a:$AUDIO_AD_COMPLETED
+            invoke-interface {v1, v2}, Ljp/nicovideo/nicobox/ui/player/e${'$'}c;->b(Lcf/a;)V
+            :original_connection_store
+            nop
+        """.trimIndent()
+    )
+}
+
+context(_: BytecodePatchContext)
+private fun resetStaleProgressOnMediaChange() {
+    val method = currentVideoInfoFingerprint.method
+    val titleUpdateIndex = method.implementation!!.instructions.indexOfFirst { instruction ->
+        ((instruction as? ReferenceInstruction)?.reference as? MethodReference)?.let { reference ->
+            reference.definingClass == "Ljp/nicovideo/nicobox/ui/player/o;" &&
+                reference.name == "h2" && reference.returnType == "V" &&
+                reference.parameterTypes.map(CharSequence::toString) == listOf(
+                    "Ljava/lang/String;",
+                    "Ljava/lang/String;",
+                    "Ljava/lang/String;",
+                    "I",
+                    "Z"
+                )
+        } == true
+    }
+    check(titleUpdateIndex >= 0) { "Player title-state update not found" }
+
+    method.addInstructionsWithLabels(
+        titleUpdateIndex,
+        """
+            invoke-virtual {v1}, Ljp/nicovideo/nicobox/ui/player/o;->s0()Landroidx/lifecycle/B;
+            move-result-object v0
+            invoke-virtual {v0}, Landroidx/lifecycle/B;->f()Ljava/lang/Object;
+            move-result-object v0
+            check-cast v0, Ljp/nicovideo/nicobox/ui/player/o${'$'}h;
+            if-eqz v0, :current_media_$titleUpdateIndex
+            invoke-virtual {v0}, Ljp/nicovideo/nicobox/ui/player/o${'$'}h;->c()Ljava/lang/String;
+            move-result-object v0
+            invoke-static {v0, v4}, Ljava/util/Objects;->equals(Ljava/lang/Object;Ljava/lang/Object;)Z
+            move-result v0
+            if-nez v0, :current_media_$titleUpdateIndex
+            const-wide/16 v7, 0x0
+            invoke-virtual {v9, v7, v8}, Ljp/nicovideo/nicobox/ui/player/PlayerFragment;->T5(J)V
+            :current_media_$titleUpdateIndex
+            nop
+        """.trimIndent()
+    )
+}
 
 context(_: BytecodePatchContext)
 private fun overrideDisplayAdLoad() {

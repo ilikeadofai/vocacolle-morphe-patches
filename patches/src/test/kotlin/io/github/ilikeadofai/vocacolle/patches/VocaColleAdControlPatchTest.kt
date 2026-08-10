@@ -51,6 +51,30 @@ class VocaColleAdControlPatchTest {
     }
 
     @Test
+    fun `fingerprints the network audio ad fallback coroutine`() {
+        assertEquals(
+            "Ljp/nicovideo/nicobox/service/player/d\$k\$a;",
+            networkAudioAdFallbackFingerprint.definingClass
+        )
+        assertEquals("invokeSuspend", networkAudioAdFallbackFingerprint.name)
+        assertEquals("Ljava/lang/Object;", networkAudioAdFallbackFingerprint.returnType)
+        assertEquals(listOf("Ljava/lang/Object;"), networkAudioAdFallbackFingerprint.parameters)
+        assertNotNull(networkAudioAdFallbackFingerprint.custom)
+    }
+
+    @Test
+    fun `fingerprints the player view model connection setup`() {
+        assertEquals(
+            "Ljp/nicovideo/nicobox/ui/player/o;",
+            playerConnectionSetupFingerprint.definingClass
+        )
+        assertEquals("X", playerConnectionSetupFingerprint.name)
+        assertEquals("V", playerConnectionSetupFingerprint.returnType)
+        assertEquals(listOf("Landroid/content/Context;"), playerConnectionSetupFingerprint.parameters)
+        assertNotNull(playerConnectionSetupFingerprint.custom)
+    }
+
+    @Test
     fun `fingerprints the central banner and in feed ad loader`() {
         assertEquals("LBj/b;", displayAdLoadFingerprint.definingClass)
         assertEquals("s", displayAdLoadFingerprint.name)

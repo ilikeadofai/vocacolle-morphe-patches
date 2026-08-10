@@ -108,6 +108,18 @@ public class PlayerTitleResolverTest {
         }
     }
 
+    @Test
+    public void resolvedTitleIsReusedSynchronouslyForLaterBindings() {
+        PlayerTitleEnrichment.rememberResolvedTitle("sm-memory-test", "English title");
+
+        assertEquals(
+                "English title",
+                PlayerTitleEnrichment.rememberedTitle("sm-memory-test", "原題")
+        );
+        assertNull(PlayerTitleEnrichment.rememberedTitle("sm-memory-miss", "原題"));
+        assertNull(PlayerTitleEnrichment.rememberedTitle("sm-memory-test", "English title"));
+    }
+
     private static final class RecordingTarget implements PlayerTitleResolver.Target {
         String boundMediaId;
         String appliedMediaId;

@@ -5,9 +5,11 @@ import app.morphe.patcher.PatcherConfig
 import app.morphe.patcher.apk.ApkUtils.applyTo
 import app.morphe.patcher.dex.BytecodeMode
 import app.morphe.patcher.dex.NoOpDexVerifier
+import app.morphe.patcher.patch.loadPatchesFromJar
 import com.android.tools.smali.dexlib2.Opcodes
 import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile
 import com.android.tools.smali.dexlib2.iface.Method
+import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
@@ -37,6 +39,14 @@ class VocaColleVocaDbPlayerTitleApkTest {
         }
         val outputApk = File(outputRoot, "vocadb-player-title-unsigned.apk")
         sourceApk.copyTo(outputApk, overwrite = true)
+        val selectedPatches = System.getProperty("vocacolle.mpp")
+            ?.let(::File)
+            ?.let { bundle ->
+                loadPatchesFromJar(setOf(bundle)).filterTo(mutableSetOf()) {
+                    it.name in setOf("VocaDB player titles", "VocaColle ad control")
+                }
+            }
+            ?: setOf(vocacolleVocaDbPlayerTitlePatch, vocacolleAdControlPatch)
 
         Patcher(
             PatcherConfig(
@@ -50,7 +60,7 @@ class VocaColleVocaDbPlayerTitleApkTest {
                 NoOpDexVerifier
             )
         ).use { patcher ->
-            patcher += setOf(vocacolleVocaDbPlayerTitlePatch, vocacolleAdControlPatch)
+            patcher += selectedPatches
             val failures = runBlocking { patcher().toList() }.filter { it.exception != null }
             assertTrue(
                 failures.isEmpty(),
@@ -98,6 +108,30 @@ class VocaColleVocaDbPlayerTitleApkTest {
             currentInstructions[enrichmentIndex].methodReference()!!.parameterTypes
                 .map(CharSequence::toString)
         )
+
+        val mediaChangeIndex = currentInstructions.indexOfFirst {
+            it.methodReference()?.let { reference ->
+                reference.definingClass == "Ljava/util/Objects;" &&
+                    reference.name == "equals" &&
+                    reference.parameterTypes.map(CharSequence::toString) == listOf(
+                        "Ljava/lang/Object;",
+                        "Ljava/lang/Object;"
+                    )
+            } == true
+        }
+        assertTrue(mediaChangeIndex >= 8)
+        val progressResetIndex = currentInstructions.indexOfFirst {
+            it.methodReference()?.let { reference ->
+                reference.definingClass == "Ljp/nicovideo/nicobox/ui/player/PlayerFragment;" &&
+                    reference.name == "T5" &&
+                    reference.parameterTypes.map(CharSequence::toString) == listOf("J")
+            } == true
+        }
+        assertTrue(progressResetIndex in (mediaChangeIndex + 1) until enrichmentIndex)
+        val progressReset = currentInstructions[progressResetIndex] as FiveRegisterInstruction
+        assertEquals(9, progressReset.registerC)
+        assertEquals(7, progressReset.registerD)
+        assertEquals(8, progressReset.registerE)
 
         val titleState = assertNotNull(methods.firstOrNull {
             it.definingClass == "Ljp/nicovideo/nicobox/ui/player/PlayerFragment;" &&

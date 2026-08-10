@@ -71,6 +71,52 @@ class VocaColleAdControlApkTest {
         }
         work.deleteRecursively()
 
+        val currentVideoMethod = ZipFile(outputApk).use { zip ->
+            zip.entries().asSequence()
+                .filter { it.name.matches(Regex("classes(?:\\d+)?\\.dex")) }
+                .mapNotNull { entry ->
+                    val dex = zip.getInputStream(entry).use { input ->
+                        DexBackedDexFile.fromInputStream(Opcodes.getDefault(), BufferedInputStream(input))
+                    }
+                    dex.classes.firstOrNull {
+                        it.type == "Ljp/nicovideo/nicobox/ui/player/PlayerFragment;"
+                    }?.methods?.firstOrNull {
+                        it.name == "K4" &&
+                            it.parameterTypes.map(CharSequence::toString) == listOf(
+                                "Ljp/nicovideo/nicobox/ui/player/PlayerFragment;",
+                                "LEl/K;",
+                                "Ljp/nicovideo/nicobox/ui/player/o\$j;"
+                            )
+                    }
+                }
+                .firstOrNull()
+        }
+        val currentVideoInstructions =
+            assertNotNull(currentVideoMethod).implementation!!.instructions.toList()
+        val mediaChangeIndex = currentVideoInstructions.indexOfFirst {
+            ((it as? ReferenceInstruction)?.reference as? MethodReference)?.let { reference ->
+                reference.definingClass == "Ljava/util/Objects;" && reference.name == "equals"
+            } == true
+        }
+        val progressResetIndex = currentVideoInstructions.indexOfFirst {
+            ((it as? ReferenceInstruction)?.reference as? MethodReference)?.let { reference ->
+                reference.definingClass == "Ljp/nicovideo/nicobox/ui/player/PlayerFragment;" &&
+                    reference.name == "T5" && reference.parameterTypes.map(CharSequence::toString) == listOf("J")
+            } == true
+        }
+        val titleUpdateIndex = currentVideoInstructions.indexOfFirst {
+            ((it as? ReferenceInstruction)?.reference as? MethodReference)?.let { reference ->
+                reference.definingClass == "Ljp/nicovideo/nicobox/ui/player/o;" &&
+                    reference.name == "h2"
+            } == true
+        }
+        assertTrue(mediaChangeIndex >= 8)
+        assertTrue(progressResetIndex in (mediaChangeIndex + 1) until titleUpdateIndex)
+        val progressReset = currentVideoInstructions[progressResetIndex] as FiveRegisterInstruction
+        assertEquals(9, progressReset.registerC)
+        assertEquals(7, progressReset.registerD)
+        assertEquals(8, progressReset.registerE)
+
         val method = ZipFile(outputApk).use { zip ->
             zip.entries().asSequence()
                 .filter { it.name.matches(Regex("classes(?:\\d+)?\\.dex")) }
@@ -126,7 +172,13 @@ class VocaColleAdControlApkTest {
         val audioReferences = audioInstructions
             .filterIsInstance<ReferenceInstruction>()
             .mapNotNull { it.reference as? MethodReference }
-        assertEquals(1, audioReferences.count {
+        assertEquals(2, audioReferences.count {
+            it.definingClass.endsWith("/ads/AdControl;") &&
+                it.name == "shouldBlockPlayerAds" &&
+                it.parameterTypes.isEmpty() &&
+                it.returnType == "Z"
+        })
+        assertEquals(0, audioReferences.count {
             it.definingClass.endsWith("/ads/AdControl;") &&
                 it.name == "shouldBlockPlayerAds" &&
                 it.parameterTypes.map(CharSequence::toString) == listOf("Landroid/content/Context;") &&
@@ -141,40 +193,208 @@ class VocaColleAdControlApkTest {
             } == true
         }
         assertTrue(applicationContextIndex >= 0)
-        val audioGuardIndex = audioInstructions.indexOfFirst { instruction ->
+        val audioGuardIndices = audioInstructions.mapIndexedNotNull { index, instruction ->
+            val reference = (instruction as? ReferenceInstruction)?.reference as? MethodReference
+            if (
+                reference?.definingClass?.endsWith("/ads/AdControl;") == true &&
+                reference.name == "shouldBlockPlayerAds" &&
+                reference.parameterTypes.isEmpty()
+            ) index else null
+        }
+        assertEquals(2, audioGuardIndices.size)
+        assertTrue(audioGuardIndices.all { it > applicationContextIndex + 2 })
+        val initializationReferences = audioInstructions.mapIndexedNotNull { index, instruction ->
+            val reference = (instruction as? ReferenceInstruction)?.reference as? MethodReference
+            if (
+                reference?.let {
+                    (it.definingClass == "Lch/d;" && it.name == "b") ||
+                        (it.definingClass == "Lmg/f;" && it.name == "d") ||
+                        (it.definingClass == "Lmg/e;" && it.name == "m")
+                } == true
+            ) index else null
+        }
+        assertTrue(initializationReferences.isNotEmpty())
+        assertTrue(initializationReferences.max() < audioGuardIndices.min())
+        audioGuardIndices.forEach { audioGuardIndex ->
+            assertEquals(
+                listOf(
+                    "invoke-static", "move-result", "if-eqz", "sget-object",
+                    "return-object", "nop", "return-object"
+                ),
+                audioInstructions.drop(audioGuardIndex).take(7).map { it.opcode.name }
+            )
+            val audioGuardInvoke = audioInstructions[audioGuardIndex] as FiveRegisterInstruction
+            assertEquals(0, audioGuardInvoke.registerCount)
+            assertEquals(1, (audioInstructions[audioGuardIndex + 1] as OneRegisterInstruction).registerA)
+            assertEquals(1, (audioInstructions[audioGuardIndex + 2] as OneRegisterInstruction).registerA)
+            assertEquals(1, (audioInstructions[audioGuardIndex + 3] as OneRegisterInstruction).registerA)
+            val noAdSentinel =
+                (audioInstructions[audioGuardIndex + 3] as ReferenceInstruction).reference as FieldReference
+            assertEquals("Lcf/c\$c;", noAdSentinel.definingClass)
+            assertEquals("a", noAdSentinel.name)
+            assertEquals("Lcf/c\$c;", noAdSentinel.type)
+            assertTrue(
+                (audioInstructions[audioGuardIndex + 6] as OneRegisterInstruction).registerA in setOf(0, 7)
+            )
+        }
+
+        val audioEventMethod = ZipFile(outputApk).use { zip ->
+            zip.entries().asSequence()
+                .filter { it.name.matches(Regex("classes(?:\\d+)?\\.dex")) }
+                .mapNotNull { entry ->
+                    val dex = zip.getInputStream(entry).use { input ->
+                        DexBackedDexFile.fromInputStream(Opcodes.getDefault(), BufferedInputStream(input))
+                    }
+                    dex.classes.firstOrNull { it.type == "Ljp/nicovideo/nicobox/service/player/g\$a;" }
+                        ?.methods
+                        ?.firstOrNull {
+                            it.name == "b" &&
+                                it.returnType == "V" &&
+                                it.parameterTypes.map(CharSequence::toString) == listOf("Lcf/a;")
+                        }
+                }
+                .firstOrNull()
+        }
+        val audioEventInstructions = assertNotNull(audioEventMethod).implementation!!.instructions.toList()
+        assertEquals(
+            listOf("invoke-static", "move-result", "if-eqz", "instance-of", "if-eqz", "sget-object", "move-object", "nop"),
+            audioEventInstructions.take(8).map { it.opcode.name }
+        )
+        val eventPolicy = audioEventInstructions[0] as FiveRegisterInstruction
+        assertEquals(0, eventPolicy.registerCount)
+        assertEquals(0, (audioEventInstructions[1] as OneRegisterInstruction).registerA)
+        val completedAudioState =
+            (audioEventInstructions[5] as ReferenceInstruction).reference as FieldReference
+        assertEquals("Lcf/a\$a;", completedAudioState.definingClass)
+        assertEquals("a", completedAudioState.name)
+        assertEquals("const-string", audioEventInstructions[8].opcode.name)
+
+        val audioStateMethod = ZipFile(outputApk).use { zip ->
+            zip.entries().asSequence()
+                .filter { it.name.matches(Regex("classes(?:\\d+)?\\.dex")) }
+                .mapNotNull { entry ->
+                    val dex = zip.getInputStream(entry).use { input ->
+                        DexBackedDexFile.fromInputStream(Opcodes.getDefault(), BufferedInputStream(input))
+                    }
+                    dex.classes.firstOrNull { it.type == "Ljp/nicovideo/nicobox/service/player/d\$k;" }
+                        ?.methods
+                        ?.firstOrNull {
+                            it.name == "invokeSuspend" &&
+                                it.returnType == "Ljava/lang/Object;" &&
+                                it.parameterTypes.map(CharSequence::toString) == listOf("Ljava/lang/Object;")
+                        }
+                }
+                .firstOrNull()
+        }
+        val audioStateInstructions = assertNotNull(audioStateMethod).implementation!!.instructions.toList()
+        assertTrue(audioStateInstructions.withIndex().any { (index, instruction) ->
+            ((instruction as? ReferenceInstruction)?.reference as? FieldReference)?.let {
+                it.definingClass == "Lcf/a\$c;" && it.name == "a"
+            } == true &&
+                ((audioStateInstructions.getOrNull(index + 1) as? ReferenceInstruction)?.reference as? MethodReference)?.let {
+                    it.definingClass == "Ljp/nicovideo/nicobox/service/player/d;" &&
+                        it.name == "v" && it.returnType == "V"
+                } == true
+        })
+
+        val networkAudioAdFallbackMethod = ZipFile(outputApk).use { zip ->
+            zip.entries().asSequence()
+                .filter { it.name.matches(Regex("classes(?:\\d+)?\\.dex")) }
+                .mapNotNull { entry ->
+                    val dex = zip.getInputStream(entry).use { input ->
+                        DexBackedDexFile.fromInputStream(Opcodes.getDefault(), BufferedInputStream(input))
+                    }
+                    dex.classes.firstOrNull {
+                        it.type == "Ljp/nicovideo/nicobox/service/player/d\$k\$a;"
+                    }?.methods?.firstOrNull {
+                        it.name == "invokeSuspend" && it.returnType == "Ljava/lang/Object;" &&
+                            it.parameterTypes.map(CharSequence::toString) == listOf("Ljava/lang/Object;")
+                    }
+                }
+                .firstOrNull()
+        }
+        val networkFallbackInstructions =
+            assertNotNull(networkAudioAdFallbackMethod).implementation!!.instructions.toList()
+        assertEquals(
+            listOf("invoke-static", "move-result", "if-eqz", "sget-object", "return-object", "nop"),
+            networkFallbackInstructions.take(6).map { it.opcode.name }
+        )
+        val networkFallbackGuard =
+            (networkFallbackInstructions[0] as ReferenceInstruction).reference as MethodReference
+        assertTrue(networkFallbackGuard.definingClass.endsWith("/ads/AdControl;"))
+        assertEquals("shouldBlockPlayerAds", networkFallbackGuard.name)
+        assertEquals("Z", networkFallbackGuard.returnType)
+        assertEquals(emptyList(), networkFallbackGuard.parameterTypes.map(CharSequence::toString))
+        assertEquals(0, (networkFallbackInstructions[1] as OneRegisterInstruction).registerA)
+        val skippedFallbackResult =
+            (networkFallbackInstructions[3] as ReferenceInstruction).reference as FieldReference
+        assertEquals("Lnl/L;", skippedFallbackResult.definingClass)
+        assertEquals("a", skippedFallbackResult.name)
+        assertEquals("Lnl/L;", skippedFallbackResult.type)
+        assertEquals(0, (networkFallbackInstructions[3] as OneRegisterInstruction).registerA)
+        assertEquals(0, (networkFallbackInstructions[4] as OneRegisterInstruction).registerA)
+
+        val originalFallbackReferences = networkFallbackInstructions.drop(6)
+            .filterIsInstance<ReferenceInstruction>()
+            .mapNotNull { it.reference as? MethodReference }
+        assertTrue(originalFallbackReferences.any {
+            it.definingClass == "Lwh/f;" && it.name == "r" &&
+                it.parameterTypes.map(CharSequence::toString) ==
+                listOf("Landroid/content/Context;", "Lce/c;", "Lsl/e;")
+        })
+
+        val playerConnectionSetupMethod = ZipFile(outputApk).use { zip ->
+            zip.entries().asSequence()
+                .filter { it.name.matches(Regex("classes(?:\\d+)?\\.dex")) }
+                .mapNotNull { entry ->
+                    val dex = zip.getInputStream(entry).use { input ->
+                        DexBackedDexFile.fromInputStream(Opcodes.getDefault(), BufferedInputStream(input))
+                    }
+                    dex.classes.firstOrNull { it.type == "Ljp/nicovideo/nicobox/ui/player/o;" }
+                        ?.methods?.firstOrNull {
+                            it.name == "X" && it.returnType == "V" &&
+                                it.parameterTypes.map(CharSequence::toString) ==
+                                listOf("Landroid/content/Context;")
+                        }
+                }
+                .firstOrNull()
+        }
+        val playerConnectionInstructions =
+            assertNotNull(playerConnectionSetupMethod).implementation!!.instructions.toList()
+        val listenerRegistrationIndex = playerConnectionInstructions.indexOfFirst { instruction ->
             ((instruction as? ReferenceInstruction)?.reference as? MethodReference)?.let {
-                it.definingClass.endsWith("/ads/AdControl;") &&
-                    it.name == "shouldBlockPlayerAds" &&
-                    it.parameterTypes.map(CharSequence::toString) == listOf("Landroid/content/Context;")
+                it.definingClass == "Ljp/nicovideo/nicobox/ui/player/e;" &&
+                    it.name == "j" &&
+                    it.parameterTypes.map(CharSequence::toString) ==
+                    listOf("Ljp/nicovideo/nicobox/ui/player/e\$c;") &&
+                    it.returnType == "V"
             } == true
         }
-        assertEquals(applicationContextIndex + 2, audioGuardIndex)
+        assertTrue(listenerRegistrationIndex >= 0)
         assertEquals(
-            listOf("invoke-static", "move-result", "if-eqz", "sget-object", "return-object"),
-            audioInstructions.drop(audioGuardIndex).take(5).map { it.opcode.name }
-        )
-        val audioGuardInvoke = audioInstructions[audioGuardIndex] as FiveRegisterInstruction
-        assertEquals(1, audioGuardInvoke.registerCount)
-        assertEquals(9, audioGuardInvoke.registerC)
-        assertEquals(
-            listOf(2, 2, 2),
-            listOf(1, 3, 4).map {
-                (audioInstructions[audioGuardIndex + it] as OneRegisterInstruction).registerA
-            }
-        )
-        val noAdSentinel =
-            (audioInstructions[audioGuardIndex + 3] as ReferenceInstruction).reference as FieldReference
-        assertEquals("Lcf/c\$c;", noAdSentinel.definingClass)
-        assertEquals("a", noAdSentinel.name)
-        assertEquals("Lcf/c\$c;", noAdSentinel.type)
-        assertEquals(
-            listOf(Opcode.NOP, Opcode.IF_NEZ),
-            audioInstructions.drop(audioGuardIndex + 5).take(2).map { it.opcode }
+            listOf(
+                "invoke-static", "move-result", "if-eqz", "sget-object", "invoke-interface", "nop"
+            ),
+            playerConnectionInstructions.drop(listenerRegistrationIndex + 1).take(6)
+                .map { it.opcode.name }
         )
         assertEquals(
-            8,
-            (audioInstructions[audioGuardIndex + 6] as OneRegisterInstruction).registerA
+            2,
+            (playerConnectionInstructions[listenerRegistrationIndex + 2] as OneRegisterInstruction).registerA,
+            "The policy result must use dead v2, not the live connection/listener registers"
         )
+        val completedStartupState =
+            (playerConnectionInstructions[listenerRegistrationIndex + 4] as ReferenceInstruction)
+                .reference as FieldReference
+        assertEquals("Lcf/a\$a;", completedStartupState.definingClass)
+        assertEquals("a", completedStartupState.name)
+        val startupEventDispatch =
+            playerConnectionInstructions[listenerRegistrationIndex + 5] as FiveRegisterInstruction
+        assertEquals(2, startupEventDispatch.registerCount)
+        assertEquals(1, startupEventDispatch.registerC)
+        assertEquals(2, startupEventDispatch.registerD)
+        val originalConnectionStore = playerConnectionInstructions[listenerRegistrationIndex + 7]
+        assertEquals("iput-object", originalConnectionStore.opcode.name)
 
         val displayAdMethod = ZipFile(outputApk).use { zip ->
             zip.entries().asSequence()
