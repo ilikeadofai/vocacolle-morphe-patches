@@ -1,3 +1,10 @@
+## [1.2.0-dev.5](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.2.0-dev.4...v1.2.0-dev.5) (2026-08-10)
+
+### 🐛 Bug Fixes
+
+* **ad-control:** remove overrideAudioAdContent that breaks player UI state ([2c085e2](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/2c085e2fb5dc2dfb0bba2c6f957e2519188e39db))
+* **ad-control:** stabilize player transition presentation ([82bdb5f](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/82bdb5fe4ae09fe5a61f24be7098f6bd624a99f4))
+
 ## [1.2.0-dev.4](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.2.0-dev.3...v1.2.0-dev.4) (2026-07-29)
 
 ### 🐛 Bug Fixes

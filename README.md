@@ -47,9 +47,9 @@ affordances remain available.
 ## Current patches
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.2.0-dev.4](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.2.0-dev.4)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
+> **[v1.2.0-dev.5](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.2.0-dev.5)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;7 patches total
 <details open>
-<summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;6 patches</summary>
+<summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;7 patches</summary>
 <br>
 
 **🎯 Supported versions:**
@@ -65,6 +65,7 @@ affordances remain available.
 | [VocaColle Morphe settings](#vocacolle-morphe-settings) | Adds display-language, cache, diagnostic, and patch-version controls to native Morphe settings. |  |
 | [VocaColle ad control](#vocacolle-ad-control) | Adds opt-in controls for VocaColle advertising surfaces. |  |
 | [VocaColle compatibility probe](#vocacolle-compatibility-probe) | Verifies that VocaColle 7.40.0 can be decoded, rebuilt, and signed without changing app behavior. |  |
+| [VocaDB player titles](#vocadb-player-titles) | Adds opt-in exact VocaDB title metadata to the full player. |  |
 
 </details>
 
