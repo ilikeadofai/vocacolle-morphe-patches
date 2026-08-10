@@ -46,6 +46,38 @@ public class SettingsStoreTest {
         );
     }
 
+    @Test
+    public void adControlsDefaultOffAndPersistChanges() {
+        InMemoryBackend backend = new InMemoryBackend();
+        SettingsStore firstProcess = new SettingsStore(backend);
+
+        assertFalse(firstProcess.isAppOpenAdBlockingEnabled());
+        assertFalse(firstProcess.isDisplayAdBlockingEnabled());
+        assertFalse(firstProcess.isPlayerAdBlockingEnabled());
+        assertFalse(firstProcess.isPremiumPromotionHidingEnabled());
+        firstProcess.setAppOpenAdBlockingEnabled(true);
+        firstProcess.setDisplayAdBlockingEnabled(true);
+        firstProcess.setPlayerAdBlockingEnabled(true);
+        firstProcess.setPremiumPromotionHidingEnabled(true);
+
+        SettingsStore restartedProcess = new SettingsStore(backend);
+        assertTrue(restartedProcess.isAppOpenAdBlockingEnabled());
+        assertTrue(restartedProcess.isDisplayAdBlockingEnabled());
+        assertTrue(restartedProcess.isPlayerAdBlockingEnabled());
+        assertTrue(restartedProcess.isPremiumPromotionHidingEnabled());
+    }
+
+    @Test
+    public void vocaDbMetadataEnrichmentDefaultsOffAndPersistsChanges() {
+        InMemoryBackend backend = new InMemoryBackend();
+        SettingsStore firstProcess = new SettingsStore(backend);
+
+        assertFalse(firstProcess.isVocaDbMetadataEnrichmentEnabled());
+        firstProcess.setVocaDbMetadataEnrichmentEnabled(true);
+
+        assertTrue(new SettingsStore(backend).isVocaDbMetadataEnrichmentEnabled());
+    }
+
     private static final class InMemoryBackend implements SettingsStore.Backend {
         private final Map<String, Boolean> values = new HashMap<>();
         private final Map<String, String> stringValues = new HashMap<>();

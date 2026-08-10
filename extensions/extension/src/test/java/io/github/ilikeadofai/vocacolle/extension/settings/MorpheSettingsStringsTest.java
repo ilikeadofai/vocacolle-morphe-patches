@@ -58,6 +58,21 @@ public class MorpheSettingsStringsTest {
                 Arrays.asList(strings.displayLanguageEntryValues)
         );
         assertEquals("Storage", strings.storageCategory);
+        assertEquals("Ads", strings.adsCategory);
+        assertEquals("Block app-open ads", strings.appOpenAdBlockingTitle);
+        assertEquals(
+                "Blocks ads shown at cold start and when returning to the app.",
+                strings.appOpenAdBlockingSummary
+        );
+        assertEquals("Block in-player audio ads", strings.playerAdBlockingTitle);
+        assertEquals("Block banner and in-feed ads", strings.displayAdBlockingTitle);
+        assertEquals("Hide Premium pop-ups", strings.premiumPromotionHidingTitle);
+        assertEquals("Metadata & translation", strings.metadataCategory);
+        assertEquals("Show VocaDB titles", strings.vocaDbMetadataTitle);
+        assertEquals(
+                "Sends only the current NicoNico media ID to VocaDB and displays exact-match title metadata. Disabled by default.",
+                strings.vocaDbMetadataSummary
+        );
         assertEquals("Cached data", strings.cacheTitle);
         assertEquals("Clear cache", strings.clearCacheTitle);
         assertEquals("Cache cleared", strings.cacheClearedMessage);

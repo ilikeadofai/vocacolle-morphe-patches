@@ -1,3 +1,34 @@
+## [1.2.0-dev.5](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.2.0-dev.4...v1.2.0-dev.5) (2026-08-10)
+
+### 🐛 Bug Fixes
+
+* **ad-control:** remove overrideAudioAdContent that breaks player UI state ([2c085e2](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/2c085e2fb5dc2dfb0bba2c6f957e2519188e39db))
+* **ad-control:** stabilize player transition presentation ([82bdb5f](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/82bdb5fe4ae09fe5a61f24be7098f6bd624a99f4))
+
+## [1.2.0-dev.4](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.2.0-dev.3...v1.2.0-dev.4) (2026-07-29)
+
+### 🐛 Bug Fixes
+
+* suppress player premium snackbar ([4bc3797](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/4bc379722e7a1a119470482cadf7148ee6941ec1))
+
+## [1.2.0-dev.3](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.2.0-dev.2...v1.2.0-dev.3) (2026-07-29)
+
+### 🐛 Bug Fixes
+
+* preserve display ad logger register ([2a5080e](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/2a5080ea5bad369d1d9b3471b350690e75a5cbcf))
+
+## [1.2.0-dev.2](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.2.0-dev.1...v1.2.0-dev.2) (2026-07-24)
+
+### 🐛 Bug Fixes
+
+* harden ad surface controls ([70836ed](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/70836ed8d73645e80a7f57b0a06c2df95497c625))
+
+## [1.2.0-dev.1](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.1.0...v1.2.0-dev.1) (2026-07-23)
+
+### ✨ New Features
+
+* add opt-in ad controls ([a4b3374](https://github.com/ilikeadofai/vocacolle-morphe-patches/commit/a4b337467c2d65a23dc269e5047ecb741004b493))
+
 ## [1.1.0](https://github.com/ilikeadofai/vocacolle-morphe-patches/compare/v1.0.0...v1.1.0) (2026-07-23)
 
 ### 🐛 Bug Fixes

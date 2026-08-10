@@ -24,7 +24,10 @@ import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+import io.github.ilikeadofai.vocacolle.extension.ads.AdControl;
 import io.github.ilikeadofai.vocacolle.extension.cache.MorpheCache;
+import io.github.ilikeadofai.vocacolle.extension.metadata.MetadataControl;
+import io.github.ilikeadofai.vocacolle.extension.metadata.PlayerTitleEnrichment;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Locale;
@@ -41,6 +44,11 @@ public final class MorpheSettingsFragment extends Fragment {
 
     private SettingsStore settingsStore;
     private Switch runtimeFeaturesSwitch;
+    private Switch vocaDbMetadataSwitch;
+    private Switch appOpenAdBlockingSwitch;
+    private Switch displayAdBlockingSwitch;
+    private Switch playerAdBlockingSwitch;
+    private Switch premiumPromotionHidingSwitch;
     private TextView cacheSummaryView;
     private View clearCacheRow;
 
@@ -132,9 +140,12 @@ public final class MorpheSettingsFragment extends Fragment {
         runtimeRow.root.setOnClickListener(ignored ->
                 runtimeFeaturesSwitch.setChecked(!runtimeFeaturesSwitch.isChecked())
         );
-        runtimeFeaturesSwitch.setOnCheckedChangeListener((ignored, checked) ->
-                settingsStore.setRuntimeFeaturesEnabled(checked)
-        );
+        runtimeFeaturesSwitch.setOnCheckedChangeListener((ignored, checked) -> {
+            settingsStore.setRuntimeFeaturesEnabled(checked);
+            if (!checked) {
+                PlayerTitleEnrichment.restoreOriginalTitles();
+            }
+        });
         content.addView(runtimeRow.root);
         content.addView(createDivider(activity, palette, dp(activity, 20)));
 
@@ -147,6 +158,117 @@ public final class MorpheSettingsFragment extends Fragment {
                 null
         );
         content.addView(diagnostics.root);
+
+        if (MetadataControl.areHooksInstalled()) {
+            addSectionTitle(content, strings.metadataCategory, palette, false);
+
+            vocaDbMetadataSwitch = new Switch(activity);
+            vocaDbMetadataSwitch.setChecked(
+                    settingsStore.isVocaDbMetadataEnrichmentEnabled()
+            );
+            tintSwitch(vocaDbMetadataSwitch, palette);
+            RowViews vocaDbMetadataRow = createSettingRow(
+                    activity,
+                    strings.vocaDbMetadataTitle,
+                    strings.vocaDbMetadataSummary,
+                    palette,
+                    true,
+                    vocaDbMetadataSwitch
+            );
+            vocaDbMetadataRow.root.setOnClickListener(ignored ->
+                    vocaDbMetadataSwitch.setChecked(!vocaDbMetadataSwitch.isChecked())
+            );
+            vocaDbMetadataSwitch.setOnCheckedChangeListener((ignored, checked) -> {
+                settingsStore.setVocaDbMetadataEnrichmentEnabled(checked);
+                if (!checked) {
+                    PlayerTitleEnrichment.restoreOriginalTitles();
+                }
+            });
+            content.addView(vocaDbMetadataRow.root);
+        }
+
+        if (AdControl.areHooksInstalled()) {
+        addSectionTitle(content, strings.adsCategory, palette, false);
+
+        appOpenAdBlockingSwitch = new Switch(activity);
+        appOpenAdBlockingSwitch.setChecked(settingsStore.isAppOpenAdBlockingEnabled());
+        tintSwitch(appOpenAdBlockingSwitch, palette);
+        RowViews appOpenAdRow = createSettingRow(
+                activity,
+                strings.appOpenAdBlockingTitle,
+                strings.appOpenAdBlockingSummary,
+                palette,
+                true,
+                appOpenAdBlockingSwitch
+        );
+        appOpenAdRow.root.setOnClickListener(ignored ->
+                appOpenAdBlockingSwitch.setChecked(!appOpenAdBlockingSwitch.isChecked())
+        );
+        appOpenAdBlockingSwitch.setOnCheckedChangeListener((ignored, checked) ->
+                settingsStore.setAppOpenAdBlockingEnabled(checked)
+        );
+        content.addView(appOpenAdRow.root);
+        content.addView(createDivider(activity, palette, dp(activity, 20)));
+
+        displayAdBlockingSwitch = new Switch(activity);
+        displayAdBlockingSwitch.setChecked(settingsStore.isDisplayAdBlockingEnabled());
+        tintSwitch(displayAdBlockingSwitch, palette);
+        RowViews displayAdRow = createSettingRow(
+                activity,
+                strings.displayAdBlockingTitle,
+                strings.displayAdBlockingSummary,
+                palette,
+                true,
+                displayAdBlockingSwitch
+        );
+        displayAdRow.root.setOnClickListener(ignored ->
+                displayAdBlockingSwitch.setChecked(!displayAdBlockingSwitch.isChecked())
+        );
+        displayAdBlockingSwitch.setOnCheckedChangeListener((ignored, checked) ->
+                settingsStore.setDisplayAdBlockingEnabled(checked)
+        );
+        content.addView(displayAdRow.root);
+        content.addView(createDivider(activity, palette, dp(activity, 20)));
+
+        playerAdBlockingSwitch = new Switch(activity);
+        playerAdBlockingSwitch.setChecked(settingsStore.isPlayerAdBlockingEnabled());
+        tintSwitch(playerAdBlockingSwitch, palette);
+        RowViews playerAdRow = createSettingRow(
+                activity,
+                strings.playerAdBlockingTitle,
+                strings.playerAdBlockingSummary,
+                palette,
+                true,
+                playerAdBlockingSwitch
+        );
+        playerAdRow.root.setOnClickListener(ignored ->
+                playerAdBlockingSwitch.setChecked(!playerAdBlockingSwitch.isChecked())
+        );
+        playerAdBlockingSwitch.setOnCheckedChangeListener((ignored, checked) ->
+                settingsStore.setPlayerAdBlockingEnabled(checked)
+        );
+        content.addView(playerAdRow.root);
+        content.addView(createDivider(activity, palette, dp(activity, 20)));
+
+        premiumPromotionHidingSwitch = new Switch(activity);
+        premiumPromotionHidingSwitch.setChecked(settingsStore.isPremiumPromotionHidingEnabled());
+        tintSwitch(premiumPromotionHidingSwitch, palette);
+        RowViews premiumPromotionRow = createSettingRow(
+                activity,
+                strings.premiumPromotionHidingTitle,
+                strings.premiumPromotionHidingSummary,
+                palette,
+                true,
+                premiumPromotionHidingSwitch
+        );
+        premiumPromotionRow.root.setOnClickListener(ignored ->
+                premiumPromotionHidingSwitch.setChecked(!premiumPromotionHidingSwitch.isChecked())
+        );
+        premiumPromotionHidingSwitch.setOnCheckedChangeListener((ignored, checked) ->
+                settingsStore.setPremiumPromotionHidingEnabled(checked)
+        );
+        content.addView(premiumPromotionRow.root);
+        }
 
         addSectionTitle(content, strings.storageCategory, palette, false);
 
@@ -237,11 +359,33 @@ public final class MorpheSettingsFragment extends Fragment {
         if (runtimeFeaturesSwitch != null && settingsStore != null) {
             runtimeFeaturesSwitch.setChecked(settingsStore.areRuntimeFeaturesEnabled());
         }
+        if (vocaDbMetadataSwitch != null && settingsStore != null) {
+            vocaDbMetadataSwitch.setChecked(
+                    settingsStore.isVocaDbMetadataEnrichmentEnabled()
+            );
+        }
+        if (appOpenAdBlockingSwitch != null && settingsStore != null) {
+            appOpenAdBlockingSwitch.setChecked(settingsStore.isAppOpenAdBlockingEnabled());
+        }
+        if (displayAdBlockingSwitch != null && settingsStore != null) {
+            displayAdBlockingSwitch.setChecked(settingsStore.isDisplayAdBlockingEnabled());
+        }
+        if (playerAdBlockingSwitch != null && settingsStore != null) {
+            playerAdBlockingSwitch.setChecked(settingsStore.isPlayerAdBlockingEnabled());
+        }
+        if (premiumPromotionHidingSwitch != null && settingsStore != null) {
+            premiumPromotionHidingSwitch.setChecked(settingsStore.isPremiumPromotionHidingEnabled());
+        }
     }
 
     @Override
     public void onDestroyView() {
         runtimeFeaturesSwitch = null;
+        vocaDbMetadataSwitch = null;
+        appOpenAdBlockingSwitch = null;
+        displayAdBlockingSwitch = null;
+        playerAdBlockingSwitch = null;
+        premiumPromotionHidingSwitch = null;
         cacheSummaryView = null;
         clearCacheRow = null;
         super.onDestroyView();

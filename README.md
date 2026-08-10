@@ -4,7 +4,8 @@ Unofficial [Morphe](https://morphe.software/) patches for the Android app
 VocaColle (`jp.nicovideo.nicobox`). The current development release adds the
 Morphe settings foundation, optional launcher branding, visible patch-version
 information, selectable Japanese/English/Korean UI, and reusable bounded
-network/cache foundations for later opt-in features.
+network/cache foundations. The v1.2 development work adds an optional ad-control
+patch with four independent runtime toggles that all default to OFF.
 
 [![Latest release](https://img.shields.io/github/v/release/ilikeadofai/vocacolle-morphe-patches?sort=semver)](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/latest)
 [![Release workflow](https://github.com/ilikeadofai/vocacolle-morphe-patches/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/ilikeadofai/vocacolle-morphe-patches/actions/workflows/release.yml)
@@ -29,14 +30,26 @@ network/cache foundations for later opt-in features.
    together, then choose System default, Japanese, English, or Korean inside
    Morphe settings. Launcher branding is optional and preserves
    the original Japanese name and icon unless custom values are supplied. The
-   compatibility probe stays optional and does not change app behavior.
+   compatibility probe stays optional and does not change app behavior. To use
+   the v1.2 advertising controls, also select `VocaColle ad control`, then enable
+   only the desired toggles inside Morphe settings; all four remain OFF by default.
+
+### Ad control scope
+
+- app-open ads,
+- Home/search/Library/playlist display ads through the central display-ad loader,
+- network and bundled local voice ads inserted between tracks,
+- the automatic Home Premium bottom sheet and seven restricted-feature Premium pop-ups.
+
+Premium registration, payment/subscription management, and non-modal feature
+affordances remain available.
 
 ## Current patches
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.1.0](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.1.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;5 patches total
+> **[v1.2.0-dev.5](https://github.com/ilikeadofai/vocacolle-morphe-patches/releases/tag/v1.2.0-dev.5)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;7 patches total
 <details open>
-<summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;5 patches</summary>
+<summary>📦 VocaColle&nbsp;&nbsp;•&nbsp;&nbsp;7 patches</summary>
 <br>
 
 **🎯 Supported versions:**
@@ -50,7 +63,9 @@ network/cache foundations for later opt-in features.
 | [English UI](#english-ui) | Adds complete English static, hardcoded, and server-provided UI localization. |  |
 | [Korean UI](#korean-ui) | Adds complete Korean static, hardcoded, and server-provided UI localization. |  |
 | [VocaColle Morphe settings](#vocacolle-morphe-settings) | Adds display-language, cache, diagnostic, and patch-version controls to native Morphe settings. |  |
+| [VocaColle ad control](#vocacolle-ad-control) | Adds opt-in controls for VocaColle advertising surfaces. |  |
 | [VocaColle compatibility probe](#vocacolle-compatibility-probe) | Verifies that VocaColle 7.40.0 can be decoded, rebuilt, and signed without changing app behavior. |  |
+| [VocaDB player titles](#vocadb-player-titles) | Adds opt-in exact VocaDB title metadata to the full player. |  |
 
 </details>
 
@@ -104,8 +119,12 @@ signed without changing runtime behavior. See the
 
 Adds a `Morphe` item to the native settings toolbar overflow and opens a
 localized framework preference screen hosted by VocaColle's existing settings
-theme. v1.1 includes a persistent runtime-feature switch, display-language
-selection, diagnostics, extension-cache usage, and a cache-clear action.
+theme. It includes a persistent runtime-feature switch, display-language
+selection, diagnostics, extension-cache usage, a cache-clear action, and v1.2
+controls for app-open ads, banner/in-feed ads, in-player audio ads, and automatic
+Premium lead dialogs. The advertising controls require the optional `VocaColle ad control`
+patch and default to OFF. Direct Premium registration and entitlement checks are
+not modified.
 VocaColle's app-information screen also displays the
 combined form `7.40.0 · Morphe 1.1.0-dev.1`; the Morphe component follows the
 bundle version automatically. The bounded HTTPS client and atomic cache remain
